@@ -1,44 +1,9 @@
 fileFormatVersion: 2
-guid: 7b8320d1007ba4748bc9a428e5275e1f
+guid: 8bf8f30ac121c924e9e0e310084675c2
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Random_Mat
-    second: {fileID: 2100000, guid: 582f2f60c04390a4eb48c01737271e9f, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Random_Mat1
-    second: {fileID: 2100000, guid: 2c72654afdc904847ba832dd9d5837ef, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Random_Mat2
-    second: {fileID: 2100000, guid: 3a94ea351ba5a624fb06248140e83f58, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Random_Mat3
-    second: {fileID: 2100000, guid: 05bb256176b096d479760710d5901840, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Random_Mat4
-    second: {fileID: 2100000, guid: a13fb9680a5d36f42b6387ecdb75e236, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Random_Mat5
-    second: {fileID: 2100000, guid: 16cb3cc7a665fbd4ab8d18ff8224b8ea, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Random_Mat6
-    second: {fileID: 2100000, guid: 2283ddb94f43ecd44a828074b14160b6, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
