@@ -12,7 +12,7 @@ using UnityEngine;
 ///
 /// Никакого спавна по таймеру больше нет — весь набор формируется один раз при старте.
 /// </summary>
-public class Itemspawner : MonoBehaviour
+public class ItemSpawner : MonoBehaviour
 {
     [Header("Каталог предметов")]
     [Tooltip("Все возможные предметы, которые могут оказаться у персонажа")]
