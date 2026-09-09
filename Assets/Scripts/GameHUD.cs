@@ -8,6 +8,8 @@ public class GameHUD : MonoBehaviour
     public CheckpointController controller;
     public ShiftManager shift;
     public EventLog log;
+    [Tooltip("Leave empty to auto-find. Without it the check panel opens automatically, as before.")]
+    public PlayerInteractor interactor;
 
     [Header("Layout")]
     [Tooltip("Design resolution. The whole HUD scales from it.")]
@@ -17,11 +19,11 @@ public class GameHUD : MonoBehaviour
     public float panelWidth = 560f;
     public float logWidth = 460f;
 
-    [Header("Debug")]
-    [Tooltip("Show the answer: document defect and which items are banned. Turn off for playtests.")]
-    public bool showAnswers = true;
+    [Header("Options")]
+    [Tooltip("Bottom bar reminding the checking rules. It never reveals the answer.")]
+    public bool showRuleHints = true;
 
-    GUIStyle _label, _title, _small, _button, _box;
+    GUIStyle _label, _title, _small, _button, _box, _prompt;
     bool _ready;
 
     void Awake()
@@ -29,6 +31,7 @@ public class GameHUD : MonoBehaviour
         if (!controller) controller = FindFirstObjectByType<CheckpointController>();
         if (!shift) shift = FindFirstObjectByType<ShiftManager>();
         if (!log) log = FindFirstObjectByType<EventLog>();
+        if (!interactor) interactor = FindFirstObjectByType<PlayerInteractor>();
     }
 
     void BuildStyles()
@@ -38,6 +41,7 @@ public class GameHUD : MonoBehaviour
         _title  = new GUIStyle(_label)          { fontSize = fontSize + 6, fontStyle = FontStyle.Bold };
         _button = new GUIStyle(GUI.skin.button) { fontSize = fontSize };
         _box    = new GUIStyle(GUI.skin.box)    { padding = new RectOffset(18, 18, 18, 18) };
+        _prompt = new GUIStyle(_label) { alignment = TextAnchor.MiddleCenter, fontSize = fontSize + 2 };
         _ready = true;
     }
 
@@ -54,12 +58,40 @@ public class GameHUD : MonoBehaviour
         else
         {
             DrawTopBar();
-            DrawCheckPanel();
             DrawLog();
             DrawHints();
+
+            if (PanelVisible) DrawCheckPanel();
+            else DrawPromptAndCrosshair();
         }
 
         GUI.matrix = old;
+    }
+
+    /// Панель проверки открыта? Без интерактора - всегда, как раньше.
+    bool PanelVisible => interactor == null || interactor.PanelOpen;
+
+    // ===== подсказка взаимодействия =====
+
+    void DrawPromptAndCrosshair()
+    {
+        // прицел
+        float d = 5f;
+        var dot = new Rect(reference.x * 0.5f - d * 0.5f, reference.y * 0.5f - d * 0.5f, d, d);
+        Color old = GUI.color;
+        GUI.color = new Color(1f, 1f, 1f, 0.65f);
+        GUI.DrawTexture(dot, Texture2D.whiteTexture);
+        GUI.color = old;
+
+        if (interactor == null) return;
+
+        string p = interactor.Prompt;
+        if (string.IsNullOrEmpty(p)) return;
+
+        var r = new Rect(reference.x * 0.5f - 300f, reference.y * 0.62f, 600f, 56f);
+        GUILayout.BeginArea(r, _box);
+        GUILayout.Label(p, _prompt);
+        GUILayout.EndArea();
     }
 
     // ===== верхняя строка =====
@@ -129,6 +161,12 @@ public class GameHUD : MonoBehaviour
                 break;
         }
 
+        if (interactor != null && interactor.PanelOpen)
+        {
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("<color=#a0a0a0>[Esc] закрыть панель</color>", _small);
+        }
+
         GUILayout.EndArea();
     }
 
@@ -146,12 +184,6 @@ public class GameHUD : MonoBehaviour
         GUILayout.Label($"Номер          {d.documentId}", _label);
         GUILayout.Label($"Годен до       {d.expiryDate}", _label);
         GUILayout.Label($"Цель визита    {d.purpose}", _label);
-
-        if (showAnswers && !string.IsNullOrEmpty(d.problem))
-        {
-            GUILayout.Space(8);
-            GUILayout.Label($"<color=#ff8080>подсказка: {d.problem}</color>", _small);
-        }
 
         GUILayout.Space(16);
         GUILayout.BeginHorizontal();
@@ -174,10 +206,7 @@ public class GameHUD : MonoBehaviour
         foreach (var it in v.items)
         {
             if (it == null) continue;
-            bool reveal = showAnswers && it.banned;
-            GUILayout.Label(reveal
-                ? $"<color=#ff8080>• {it.displayName} — ЗАПРЕЩЕНО</color>"
-                : $"• {it.displayName}", _label);
+            GUILayout.Label($"• {it.displayName}", _label);
         }
 
         GUILayout.Space(16);
@@ -215,6 +244,8 @@ public class GameHUD : MonoBehaviour
 
     void DrawHints()
     {
+        if (!showRuleHints) return;
+
         string hint = controller.CurrentStage switch
         {
             CheckpointController.Stage.Documents =>

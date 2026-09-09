@@ -15,6 +15,12 @@ public class Visitor : MonoBehaviour
     [Tooltip("Float parameter driven by current speed.")]
     public string speedParam = "Speed";
 
+    [Header("Interaction")]
+    [Tooltip("Adds a trigger capsule when the prefab has no collider, so the player can aim at the visitor.")]
+    public bool autoAddCollider = true;
+    public float colliderHeight = 1.8f;
+    public float colliderRadius = 0.3f;
+
     [Header("Data")]
     public DocumentData document;
     public List<ItemDefinition> items = new List<ItemDefinition>();
@@ -37,6 +43,15 @@ public class Visitor : MonoBehaviour
     {
         if (!animator) animator = GetComponentInChildren<Animator>();
         if (animator) animator.applyRootMotion = false;
+
+        if (autoAddCollider && GetComponentInChildren<Collider>() == null)
+        {
+            var cap = gameObject.AddComponent<CapsuleCollider>();
+            cap.isTrigger = true;              // не мешает ходить, но ловится лучом взгляда
+            cap.height = colliderHeight;
+            cap.radius = colliderRadius;
+            cap.center = new Vector3(0f, colliderHeight * 0.5f, 0f);
+        }
     }
 
     public void SetupAnimator(RuntimeAnimatorController controller, bool overrideExisting)

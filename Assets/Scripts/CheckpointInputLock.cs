@@ -7,6 +7,8 @@ public class CheckpointInputLock : MonoBehaviour
     [Header("References")]
     public CheckpointController controller;
     public ShiftManager shift;
+    [Tooltip("Leave empty to auto-find. When present, the player is frozen only while the check panel is open.")]
+    public PlayerInteractor interactor;
 
     [Tooltip("Drag the Player object here. Add the camera rig too if it is not a child of the player.")]
     public List<GameObject> objectsToFreeze = new List<GameObject>();
@@ -31,6 +33,7 @@ public class CheckpointInputLock : MonoBehaviour
     {
         if (!controller) controller = FindFirstObjectByType<CheckpointController>();
         if (!shift) shift = FindFirstObjectByType<ShiftManager>();
+        if (!interactor) interactor = FindFirstObjectByType<PlayerInteractor>();
     }
 
     void Start()
@@ -55,6 +58,10 @@ public class CheckpointInputLock : MonoBehaviour
     bool NeedLock()
     {
         if (shift && shift.Finished) return true;   // экран итогов
+
+        // Есть интерактор - замораживаем ровно на время открытой панели.
+        if (interactor) return interactor.PanelOpen;
+
         if (!controller) return false;
 
         var s = controller.CurrentStage;
@@ -83,6 +90,7 @@ public class CheckpointInputLock : MonoBehaviour
             foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true))
             {
                 if (!mb || mb == this || !mb.enabled) continue;
+                if (mb is PlayerInteractor) continue;   // иначе не закрыть панель по Esc
                 if (keepEnabled.Contains(mb.GetType().Name)) continue;
 
                 mb.enabled = false;
