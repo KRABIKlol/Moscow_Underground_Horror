@@ -9,6 +9,8 @@ public class CheckpointInputLock : MonoBehaviour
     public ShiftManager shift;
     [Tooltip("Leave empty to auto-find. When present, the player is frozen only while the check panel is open.")]
     public PlayerInteractor interactor;
+    [Tooltip("Leave empty to auto-find. While training on the range is on, the player stays free.")]
+    public ShootingRange range;
 
     [Tooltip("Drag the Player object here. Add the camera rig too if it is not a child of the player.")]
     public List<GameObject> objectsToFreeze = new List<GameObject>();
@@ -34,6 +36,7 @@ public class CheckpointInputLock : MonoBehaviour
         if (!controller) controller = FindFirstObjectByType<CheckpointController>();
         if (!shift) shift = FindFirstObjectByType<ShiftManager>();
         if (!interactor) interactor = FindFirstObjectByType<PlayerInteractor>();
+        if (!range) range = FindFirstObjectByType<ShootingRange>();
     }
 
     void Start()
@@ -57,7 +60,8 @@ public class CheckpointInputLock : MonoBehaviour
 
     bool NeedLock()
     {
-        if (shift && shift.Finished) return true;   // экран итогов
+        // Экран итогов смены. Но если игрок ушёл в тир - он должен ходить и стрелять.
+        if (shift && shift.Finished) return !(range && range.PlayerFree);
 
         // Есть интерактор - замораживаем ровно на время открытой панели.
         if (interactor) return interactor.PanelOpen;

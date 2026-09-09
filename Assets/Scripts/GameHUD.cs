@@ -10,6 +10,8 @@ public class GameHUD : MonoBehaviour
     public EventLog log;
     [Tooltip("Leave empty to auto-find. Without it the check panel opens automatically, as before.")]
     public PlayerInteractor interactor;
+    [Tooltip("Leave empty to auto-find. While training is on, the shift results screen steps aside.")]
+    public ShootingRange range;
 
     [Header("Layout")]
     [Tooltip("Design resolution. The whole HUD scales from it.")]
@@ -32,6 +34,7 @@ public class GameHUD : MonoBehaviour
         if (!shift) shift = FindFirstObjectByType<ShiftManager>();
         if (!log) log = FindFirstObjectByType<EventLog>();
         if (!interactor) interactor = FindFirstObjectByType<PlayerInteractor>();
+        if (!range) range = FindFirstObjectByType<ShootingRange>();
     }
 
     void BuildStyles()
@@ -54,7 +57,11 @@ public class GameHUD : MonoBehaviour
         Matrix4x4 old = GUI.matrix;
         GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
 
-        if (shift.Finished) DrawResults();
+        // Пока игрок в тире, интерфейс рисует ShootingRange.
+        if (shift.Finished)
+        {
+            if (!(range && range.PlayerFree)) DrawResults();
+        }
         else
         {
             DrawTopBar();
@@ -282,9 +289,17 @@ public class GameHUD : MonoBehaviour
         GUILayout.Space(24);
         if (GUILayout.Button("Начать смену заново", _button, GUILayout.Height(fontSize * 2.4f)))
         {
+            if (range) range.CloseAndReset();
             shift.StartShift();
             if (log) log.Clear();
             controller.SpawnVisitor();
+        }
+
+        if (range && range.Available)
+        {
+            GUILayout.Space(10);
+            if (GUILayout.Button("Пострелять в тире", _button, GUILayout.Height(fontSize * 2.4f)))
+                range.Open();
         }
 
         GUILayout.EndArea();
