@@ -3,12 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-// Простой контроллер персонажа от первого лица.
-// Умеет: перемещение (ходьба/бег/присед с настраиваемой скоростью каждого режима),
-// прыжок, присед (удержание или переключение клавишей) и обзор мышью.
-// Автоматически работает и с новым Input System, и со старым Input Manager —
-// переключение происходит через директиву ENABLE_INPUT_SYSTEM, которую Unity
-// расставляет сама в зависимости от настроек проекта (Active Input Handling).
+
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour
 {
