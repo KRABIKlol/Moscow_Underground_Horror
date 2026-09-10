@@ -13,22 +13,22 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Peasant_Girl_diffuse
-    second: {fileID: 2800000, guid: 2314b386f63e83e4ca487e4b35ea00ee, type: 3}
+    second: {fileID: 2800000, guid: 024e99a27fa86524183f374262b2bbba, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Peasant_Girl_normal
-    second: {fileID: 2800000, guid: a9b303f4d0f4d8243a62f3869b665580, type: 3}
+    second: {fileID: 2800000, guid: cbdef5beb6ea86f40b3bb2b0c81bd410, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Peasant_Girl_specular
-    second: {fileID: 2800000, guid: 93e5c43da66e51744b1f643241f87615, type: 3}
+    second: {fileID: 2800000, guid: dfb3bc4a36ff1a94f9d576d1b70da410, type: 3}
   materials:
-    materialImportMode: 2
+    materialImportMode: 1
     materialName: 0
     materialSearch: 1
-    materialLocation: 1
+    materialLocation: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
@@ -42,7 +42,7 @@ ModelImporter:
     animationDoRetargetingWarnings: 0
     importAnimatedCustomProperties: 0
     importConstraints: 0
-    animationCompression: 1
+    animationCompression: 3
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
@@ -114,13 +114,13 @@ ModelImporter:
     globalScale: 1
     rootMotionBoneName: 
     hasTranslationDoF: 0
-    hasExtraRoot: 0
+    hasExtraRoot: 1
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 2
+  animationType: 3
   humanoidOversampling: 1
-  avatarSetup: 0
+  avatarSetup: 1
   addHumanoidExtraRootOnlyWhenUsingAvatar: 1
   importBlendShapeDeformPercent: 1
   remapMaterialsIfMaterialImportModeIsNone: 0
