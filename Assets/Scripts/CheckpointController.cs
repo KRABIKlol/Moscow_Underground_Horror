@@ -35,6 +35,13 @@ public class CheckpointController : MonoBehaviour
     public Transform exitPoint;      // прошёл
     public Transform rejectPoint;    // развернули
 
+    [Header("Routes (optional - leave empty to walk straight)")]
+    [Tooltip("Spawn -> desk")]      public RoutePath routeToDesk;
+    [Tooltip("Desk -> scanner")]    public RoutePath routeToScanner;
+    [Tooltip("Scanner -> table")]   public RoutePath routeToTable;
+    [Tooltip("Table -> exit")]      public RoutePath routeToExit;
+    [Tooltip("Anywhere -> reject")] public RoutePath routeToReject;
+
     [Header("Systems")]
     public MetalDetectorVisual detector;
     public ItemTable table;
@@ -58,6 +65,8 @@ public class CheckpointController : MonoBehaviour
     public event Action<Visitor, bool> OnScanFinished;
     public event Action<Visitor> OnReachedTable;
     public event Action<Visitor, bool> OnVisitorHandled;
+
+    static System.Collections.Generic.IReadOnlyList<Transform> Way(RoutePath r) => r ? r.Points : null;
 
     float BannedChance => Mathf.Lerp(bannedChanceStart, bannedChanceEnd, shift ? shift.Progress : 0f);
     float BadDocChance => Mathf.Lerp(badDocChanceStart, badDocChanceEnd, shift ? shift.Progress : 0f);
@@ -137,7 +146,7 @@ public class CheckpointController : MonoBehaviour
         OnVisitorSpawned?.Invoke(v);
 
         // 1. идёт к окну и показывает документ
-        v.GoTo(deskPoint, () =>
+        v.GoVia(Way(routeToDesk), deskPoint, () =>
         {
             if (Current != v) return;
             CurrentStage = Stage.Documents;
@@ -156,7 +165,7 @@ public class CheckpointController : MonoBehaviour
         var v = Current;
         CurrentStage = Stage.Scanning;
         if (detector) detector.SetScanning();
-        v.GoTo(scannerPoint, () => StartCoroutine(ScanRoutine(v)));
+        v.GoVia(Way(routeToScanner), scannerPoint, () => StartCoroutine(ScanRoutine(v)));
     }
 
     /// Пропустить - доступно после стола.
@@ -167,7 +176,7 @@ public class CheckpointController : MonoBehaviour
         var v = Current;
         Score(v, true);
         Finish();
-        v.GoTo(exitPoint, () => Destroy(v.gameObject, 0.2f));
+        v.GoVia(Way(routeToExit), exitPoint, () => Destroy(v.gameObject, 0.2f));
     }
 
     /// Развернуть или задержать - доступно на любой стадии, где есть посетитель.
@@ -178,7 +187,7 @@ public class CheckpointController : MonoBehaviour
         var v = Current;
         Score(v, false);
         Finish();
-        v.GoTo(rejectPoint, () => Destroy(v.gameObject, 0.2f));
+        v.GoVia(Way(routeToReject), rejectPoint, () => Destroy(v.gameObject, 0.2f));
     }
 
     // ===== внутреннее =====
@@ -200,7 +209,7 @@ public class CheckpointController : MonoBehaviour
         yield return new WaitForSeconds(resultHold);
         if (Current != v) yield break;
 
-        v.GoTo(tablePoint, () =>
+        v.GoVia(Way(routeToTable), tablePoint, () =>
         {
             if (Current != v) return;
             if (table) table.Show(v.items);
