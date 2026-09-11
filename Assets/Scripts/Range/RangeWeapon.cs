@@ -37,8 +37,14 @@ public class RangeWeapon : MonoBehaviour
     public float fireRate = 600f;
     [Tooltip("Дальность луча, метры.")]
     public float shotRange = 60f;
-    [Tooltip("Разброс, градусы.")]
-    public float spread = 0.7f;
+    [Tooltip("Максимальный разброс при долгой очереди, градусы. 0 — всегда строго в прицел.")]
+    public float spread = 0.25f;
+    [Tooltip("Первый выстрел после паузы уходит точно в прицел, разброс набирается только очередью.")]
+    public bool firstShotAccurate = true;
+    [Tooltip("За сколько секунд разброс спадает обратно к нулю.")]
+    public float spreadRecovery = 0.5f;
+    [Tooltip("Рисовать след выстрела в Scene View — видно, куда реально ушла пуля.")]
+    public bool drawShotRays;
     public LayerMask hitMask = ~0;
 
     [Header("Магазин")]
@@ -81,7 +87,7 @@ public class RangeWeapon : MonoBehaviour
     Camera _cam;
     Transform _ignoreRoot;
     AudioSource _audio;
-    float _nextShot, _reloadLeft, _kick, _rise;
+    float _nextShot, _reloadLeft, _kick, _rise, _bloom;
     Quaternion _autoRot = Quaternion.identity;
     Vector3 _autoPos, _heldScale = Vector3.one;
     Bounds _bounds;
@@ -141,6 +147,7 @@ public class RangeWeapon : MonoBehaviour
         transform.localRotation = HoldRot;
 
         Held = true;
+        _bloom = 0f;
         Reloading = false;
         _reloadLeft = 0f;
         _kick = 0f;
@@ -186,6 +193,7 @@ public class RangeWeapon : MonoBehaviour
         // Отдача возвращает модель на место.
         _kick = Mathf.Lerp(_kick, 0f, Time.deltaTime * recoilReturn);
         _rise = Mathf.Lerp(_rise, 0f, Time.deltaTime * recoilReturn);
+        _bloom = Mathf.MoveTowards(_bloom, 0f, Time.deltaTime / Mathf.Max(0.05f, spreadRecovery));
 
         // Поза пересчитывается каждый кадр, поэтому поля можно крутить прямо в Play Mode.
         transform.localScale = _heldScale * Mathf.Max(0.01f, holdScale);
@@ -361,16 +369,23 @@ public class RangeWeapon : MonoBehaviour
     {
         if (!_cam) return;
 
-        Vector3 dir = _cam.transform.forward;
-        if (spread > 0f)
+        // Луч строго из центра кадра — то же место, где нарисован прицел.
+        Ray ray = _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Vector3 dir = ray.direction;
+
+        // Прицельный выстрел уходит строго в перекрестие; разброс набирается только очередью.
+        float aimSpread = spread * (firstShotAccurate ? _bloom : 1f);
+        _bloom = Mathf.Clamp01(_bloom + 0.34f);
+
+        if (aimSpread > 0f)
         {
-            dir = Quaternion.Euler(
-                UnityEngine.Random.Range(-spread, spread),
-                UnityEngine.Random.Range(-spread, spread),
-                0f) * dir;
+            dir = Quaternion.AngleAxis(UnityEngine.Random.Range(-aimSpread, aimSpread), _cam.transform.up) *
+                  Quaternion.AngleAxis(UnityEngine.Random.Range(-aimSpread, aimSpread), _cam.transform.right) * dir;
         }
 
-        var hits = Physics.RaycastAll(_cam.transform.position, dir, shotRange, hitMask,
+        if (drawShotRays) Debug.DrawRay(ray.origin, dir * shotRange, Color.red, 1.5f);
+
+        var hits = Physics.RaycastAll(ray.origin, dir, shotRange, hitMask,
                                       QueryTriggerInteraction.Ignore);
         if (hits.Length == 0) return;
 

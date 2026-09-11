@@ -16,31 +16,31 @@ MonoBehaviour:
   - displayName: "\u041A\u043B\u044E\u0447\u0438"
     banned: 0
     triggersDetector: 1
-    prefab: {fileID: -6689036041284674117, guid: 2e2546baab3797946b0475b52396a479, type: 3}
+    prefab: {fileID: 2860154413492794093, guid: 92405eb09035ba645b419390bb3cd8da, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0439 \u0442\u0435\u043B\u0435\u0444\u043E\u043D"
     banned: 0
-    triggersDetector: 1
-    prefab: {fileID: -6689036041284674117, guid: ffd42725d1686734a93997ea985050bc, type: 3}
+    triggersDetector: 0
+    prefab: {fileID: 9014519405614919060, guid: 60ba3f25b05556e4f99f78836ff59cfc, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041A\u043E\u0448\u0435\u043B\u0451\u043A"
     banned: 0
-    triggersDetector: 0
+    triggersDetector: 1
     prefab: {fileID: -6689036041284674117, guid: 1586b7abb7f79024e83b9e2601008f18, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0411\u0443\u0442\u044B\u043B\u043A\u0430 \u0432\u043E\u0434\u044B"
     banned: 0
     triggersDetector: 0
-    prefab: {fileID: -6689036041284674117, guid: 1586b7abb7f79024e83b9e2601008f18, type: 3}
+    prefab: {fileID: 6675172076625346712, guid: 1ee809ce656c5d64289d132585d8057c, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0417\u043E\u043D\u0442"
     banned: 0
-    triggersDetector: 0
-    prefab: {fileID: -6689036041284674117, guid: 45b31dd2abdfe604c93b334aa3c13cca, type: 3}
+    triggersDetector: 1
+    prefab: {fileID: 7336862963801106699, guid: 25d774174a078684cba3cc63c224a00d, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041D\u0430\u0443\u0448\u043D\u0438\u043A\u0438"
@@ -63,7 +63,7 @@ MonoBehaviour:
     note: 
   - displayName: "\u0422\u0435\u0440\u043C\u043E\u0441"
     banned: 0
-    triggersDetector: 0
+    triggersDetector: 1
     prefab: {fileID: 0}
     icon: {fileID: 0}
     note: 
@@ -99,7 +99,7 @@ MonoBehaviour:
     note: 
   - displayName: "\u042D\u043B\u0435\u043A\u0442\u0440\u043E\u0448\u043E\u043A\u0435\u0440"
     banned: 1
-    triggersDetector: 1
+    triggersDetector: 0
     prefab: {fileID: 0}
     icon: {fileID: 0}
     note: 
@@ -112,7 +112,7 @@ MonoBehaviour:
     note: 
   - displayName: "\u0413\u0430\u0437\u043E\u0432\u044B\u0439 \u0431\u0430\u043B\u043B\u043E\u043D\u0447\u0438\u043A"
     banned: 1
-    triggersDetector: 0
+    triggersDetector: 1
     prefab: {fileID: 0}
     icon: {fileID: 0}
     note: 

@@ -14,6 +14,8 @@ public class ShootingRange : MonoBehaviour
     public ShiftManager shift;
     public EventLog log;
     public CheckpointInputLock inputLock;
+    [Tooltip("Меню паузы. Пока оно открыто, тир не трогает курсор и не реагирует на Escape.")]
+    public PauseMenu pause;
     public Camera playerCamera;
     [Tooltip("Корневой объект игрока — чтобы луч выстрела не цеплял его самого.")]
     public Transform playerRoot;
@@ -55,11 +57,6 @@ public class ShootingRange : MonoBehaviour
     public float tweakMoveSpeed = 0.25f;
     public float tweakRotateSpeed = 60f;
 
-    [Header("Интерфейс")]
-    public Vector2 reference = new Vector2(1920f, 1080f);
-    public int fontSize = 20;
-    public float margin = 32f;
-
     // ===== состояние =====
 
     public State Current { get; private set; } = State.Closed;
@@ -80,13 +77,27 @@ public class ShootingRange : MonoBehaviour
     public RangeWeapon HeldWeapon { get; private set; }
     public RangeWeapon Focused { get; private set; }
 
+    /// Открыто меню паузы — тир замолкает и ни на что не реагирует.
+    public bool Paused => pause && pause.IsPaused;
+
+    /// Всё, что нужно интерфейсу и чего он сам знать не может.
+    public float CountdownLeft => _countLeft;
+    public bool HitFlash => _hitFlash > 0f;
+    public int WeaponCount => weapons.Count;
+    public int TargetCount => _targetCount;
+    public float RoundDuration => roundDuration;
+    public bool SceneReady => playerCamera && weapons.Count > 0 && _targetCount > 0;
+
+    /// Подсказка над прицелом: на что смотрит игрок.
+    public string Prompt => Current == State.Ready && Focused
+        ? $"[{keyLabel}]  Взять {Focused.displayName}"
+        : null;
+
     const string BestKey = "range_best_score";
 
     float _countLeft, _hitFlash;
     int _targetCount;
     public bool TweakMode { get; private set; }
-    GUIStyle _label, _small, _title, _big, _button, _box, _center;
-    bool _styles;
 
     // ===== жизненный цикл =====
 
@@ -95,6 +106,7 @@ public class ShootingRange : MonoBehaviour
         if (!shift) shift = FindFirstObjectByType<ShiftManager>();
         if (!log) log = FindFirstObjectByType<EventLog>();
         if (!inputLock) inputLock = FindFirstObjectByType<CheckpointInputLock>();
+        if (!pause) pause = FindFirstObjectByType<PauseMenu>();
         if (!playerCamera) playerCamera = Camera.main;
         if (!playerCamera) playerCamera = FindFirstObjectByType<Camera>();
 
@@ -123,6 +135,10 @@ public class ShootingRange : MonoBehaviour
     {
         if (shift) shift.OnShiftFinished += HandleShiftFinished;
         else Debug.LogWarning("[Тир] ShiftManager не найден — тир не откроется сам после смены.", this);
+
+        if (!FindFirstObjectByType<RangeUI>())
+            Debug.LogError("[Тир] В сцене нет RangeUI — интерфейса тира не будет. " +
+                           "Собери его: Tools → Стрельбище → «4. Собрать интерфейс тира».", this);
 
         if (weapons.Count == 0)
             Debug.LogWarning("[Тир] В сцене нет ни одного RangeWeapon — брать будет нечего. " +
@@ -189,6 +205,15 @@ public class ShootingRange : MonoBehaviour
         if (shift && !shift.Finished) shift.EndShift(false);
         Available = true;
         Open();
+    }
+
+    /// Кнопка «Ещё раз» на экране итогов зачёта.
+    public void RestartRound()
+    {
+        if (Current != State.Results) return;
+        Current = State.Ready;
+        CountTargets();
+        ApplyCursor();
     }
 
     /// Вернуться к итогам смены.
@@ -416,7 +441,10 @@ public class ShootingRange : MonoBehaviour
 
     void Update()
     {
-        if (_hitFlash > 0f) _hitFlash -= Time.deltaTime;
+        // На паузе Escape принадлежит меню, а курсор — игроку.
+        if (Paused) return;
+
+        if (_hitFlash > 0f) _hitFlash -= Time.unscaledDeltaTime;
 
         switch (Current)
         {
@@ -428,7 +456,7 @@ public class ShootingRange : MonoBehaviour
             case State.Ready:
                 Focused = FindWeaponInView();
                 if (Focused && InteractPressed()) StartRound(Focused);
-                else if (EscapePressed()) Close();
+                else if (LeavePressed()) Close();
                 break;
 
             case State.Countdown:
@@ -440,7 +468,7 @@ public class ShootingRange : MonoBehaviour
                     Current = State.Running;
                     if (HeldWeapon) { HeldWeapon.Refill(); HeldWeapon.FireEnabled = true; }
                 }
-                else if (EscapePressed()) EndRound(true);
+                else if (LeavePressed()) EndRound(true);
                 break;
 
             case State.Running:
@@ -448,11 +476,11 @@ public class ShootingRange : MonoBehaviour
                 if (TweakMode) { HandleTweak(); break; }   // таймер на паузе, пока подгоняешь
                 TimeLeft -= Time.deltaTime;
                 if (TimeLeft <= 0f) { TimeLeft = 0f; EndRound(false); }
-                else if (EscapePressed()) EndRound(true);
+                else if (LeavePressed()) EndRound(true);
                 break;
 
             case State.Results:
-                if (EscapePressed()) Close();
+                if (LeavePressed()) Close();
                 break;
         }
     }
@@ -460,7 +488,7 @@ public class ShootingRange : MonoBehaviour
     /// Курсор держим сами: FirstPersonController отпускает его по Esc, а в тире это мешает.
     void LateUpdate()
     {
-        if (Current == State.Closed) return;
+        if (Current == State.Closed || Paused) return;
         ApplyCursor();
     }
 
@@ -504,223 +532,6 @@ public class ShootingRange : MonoBehaviour
         return best;
     }
 
-    // ===== интерфейс =====
-
-    void BuildStyles()
-    {
-        _label  = new GUIStyle(GUI.skin.label)  { richText = true, fontSize = fontSize, wordWrap = true };
-        _small  = new GUIStyle(_label)          { fontSize = Mathf.RoundToInt(fontSize * 0.85f) };
-        _title  = new GUIStyle(_label)          { fontSize = fontSize + 6, fontStyle = FontStyle.Bold };
-        _big    = new GUIStyle(_label)          { fontSize = fontSize * 4, fontStyle = FontStyle.Bold,
-                                                  alignment = TextAnchor.MiddleCenter };
-        _center = new GUIStyle(_label)          { alignment = TextAnchor.MiddleCenter, fontSize = fontSize + 2 };
-        _button = new GUIStyle(GUI.skin.button) { fontSize = fontSize };
-        _box    = new GUIStyle(GUI.skin.box)    { padding = new RectOffset(18, 18, 18, 18) };
-        _styles = true;
-    }
-
-    void OnGUI()
-    {
-        if (Current == State.Closed) return;
-        if (!_styles) BuildStyles();
-
-        float scale = Mathf.Min(Screen.width / reference.x, Screen.height / reference.y);
-        Matrix4x4 old = GUI.matrix;
-        GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(scale, scale, 1f));
-
-        switch (Current)
-        {
-            case State.Ready:     DrawReady();     break;
-            case State.Countdown: DrawCountdown(); break;
-            case State.Running:   DrawRunning();   break;
-            case State.Results:   DrawResults();   break;
-        }
-
-        GUI.matrix = old;
-    }
-
-    void DrawReady()
-    {
-        DrawCrosshair();
-
-        var top = new Rect(margin, margin, reference.x - margin * 2f, 64f);
-        GUILayout.BeginArea(top, _box);
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("СТРЕЛЬБИЩЕ", _label, GUILayout.Width(260));
-        GUILayout.Label($"зачёт  {Mathf.RoundToInt(roundDuration)} с", _label, GUILayout.Width(220));
-        GUILayout.FlexibleSpace();
-        GUILayout.Label($"рекорд  {BestScore}", _label, GUILayout.Width(220));
-        GUILayout.EndHorizontal();
-        GUILayout.EndArea();
-
-        if (Focused)
-        {
-            var r = new Rect(reference.x * 0.5f - 300f, reference.y * 0.62f, 600f, 56f);
-            GUILayout.BeginArea(r, _box);
-            GUILayout.Label($"[{keyLabel}]  Взять {Focused.displayName}", _center);
-            GUILayout.EndArea();
-        }
-
-        if (weapons.Count == 0 || _targetCount == 0 || !playerCamera)
-        {
-            var warn = new Rect(reference.x * 0.5f - 400f, reference.y * 0.34f, 800f, 150f);
-            GUILayout.BeginArea(warn, _box);
-            GUILayout.Label("<color=#ff8080>СЦЕНА НЕ НАСТРОЕНА</color>", _center);
-            GUILayout.Space(8);
-            if (!playerCamera)
-                GUILayout.Label("• Не найдена камера игрока — заполни Player Camera или поставь тег MainCamera.", _small);
-            if (weapons.Count == 0)
-                GUILayout.Label("• Нет оружия: выдели модели стволов → Tools ▸ Стрельбище ▸ «2. Выделенное — это оружие».", _small);
-            if (_targetCount == 0)
-                GUILayout.Label("• Нет мишеней: выдели щиты и манекены → Tools ▸ Стрельбище ▸ «3. Выделенное — это мишени».", _small);
-            GUILayout.EndArea();
-        }
-
-        var hint = new Rect(margin, reference.y - margin - 56f, reference.x - margin * 2f, 56f);
-        GUILayout.BeginArea(hint, _box);
-        GUILayout.Label("Возьми ствол со стойки — сразу пойдёт зачёт на время. " +
-                        "ЛКМ — огонь, R — перезарядка, Esc — вернуться к итогам смены.", _small);
-        GUILayout.EndArea();
-    }
-
-    void DrawCountdown()
-    {
-        DrawCrosshair();
-        DrawAmmo();
-        if (TweakMode) { DrawTweak(); return; }
-
-        string text = _countLeft > 1f ? Mathf.CeilToInt(_countLeft).ToString() : "ОГОНЬ";
-        var r = new Rect(reference.x * 0.5f - 200f, reference.y * 0.33f, 400f, 160f);
-        GUI.Label(r, text, _big);
-    }
-
-    void DrawRunning()
-    {
-        DrawCrosshair();
-        DrawAmmo();
-        if (TweakMode) DrawTweak();
-
-        var top = new Rect(margin, margin, reference.x - margin * 2f, 64f);
-        GUILayout.BeginArea(top, _box);
-        GUILayout.BeginHorizontal();
-
-        string col = TimeLeft <= 10f ? "#ff6060" : "#ffffff";
-        GUILayout.Label($"ТИР  <color={col}>{TimeLeftString}</color>", _label, GUILayout.Width(260));
-        GUILayout.Label($"попаданий  {Hits}", _label, GUILayout.Width(240));
-        GUILayout.Label($"выстрелов  {Shots}", _label, GUILayout.Width(240));
-        GUILayout.FlexibleSpace();
-        GUILayout.Label($"точность  {Mathf.RoundToInt(Accuracy * 100f)} %", _label, GUILayout.Width(240));
-        GUILayout.Label($"очки  {Score}", _label, GUILayout.Width(160));
-        if (allowTweakMode) GUILayout.Label("<color=#a0a0a0>F2 — подгонка</color>", _small, GUILayout.Width(180));
-
-        GUILayout.EndHorizontal();
-        GUILayout.EndArea();
-    }
-
-    void DrawResults()
-    {
-        var r = new Rect(reference.x * 0.5f - 320f, reference.y * 0.5f - 240f, 640f, 480f);
-        GUILayout.BeginArea(r, _box);
-
-        GUILayout.Label("ЗАЧЁТ ОКОНЧЕН", _title);
-        GUILayout.Space(20);
-
-        GUILayout.Label($"Попаданий                 {Hits}", _label);
-        GUILayout.Label($"Выстрелов                 {Shots}", _label);
-        GUILayout.Label($"Точность                  {Mathf.RoundToInt(Accuracy * 100f)} %", _label);
-        GUILayout.Label($"Очки                      {Score}", _label);
-        GUILayout.Label($"Рекорд                    {BestScore}", _small);
-
-        GUILayout.Space(16);
-        GUILayout.Label($"ОЦЕНКА   {Grade}", _title);
-
-        GUILayout.Space(24);
-        float h = fontSize * 2.4f;
-        if (GUILayout.Button("Ещё раз", _button, GUILayout.Height(h)))
-        {
-            Current = State.Ready;
-            ApplyCursor();
-        }
-        GUILayout.Space(8);
-        if (GUILayout.Button("К итогам смены", _button, GUILayout.Height(h)))
-            Close();
-
-        GUILayout.EndArea();
-    }
-
-    void DrawTweak()
-    {
-        var w = HeldWeapon;
-        if (!w) return;
-
-        var r = new Rect(margin, margin + 90f, 640f, 430f);
-        GUILayout.BeginArea(r, _box);
-
-        GUILayout.Label("ПОДГОНКА ОРУЖИЯ", _title);
-        GUILayout.Space(6);
-        GUILayout.Label($"<color=#ffd070>{w.displayName}</color>   длина модели {w.BarrelLength:0.00} м", _small);
-        GUILayout.Space(10);
-
-        GUILayout.Label($"Hold Position   {w.holdPosition.x:0.###}   {w.holdPosition.y:0.###}   {w.holdPosition.z:0.###}", _label);
-        GUILayout.Label($"Hold Rotation   {w.holdRotation.x:0.#}   {w.holdRotation.y:0.#}   {w.holdRotation.z:0.#}", _label);
-        GUILayout.Label($"Hold Scale      {w.holdScale:0.###}", _label);
-        GUILayout.Label($"Orientation Preset   <color=#ffd070>" +
-                        (w.orientationPreset < 0 ? "авто" : $"{w.orientationPreset} из {RangeWeapon.PresetCount - 1}") +
-                        "</color>", _label);
-
-        GUILayout.Space(12);
-        GUILayout.Label("<color=#80ff90>TAB — перебрать развороты, пока ствол не встанет прямо.</color> Это главное.", _label);
-        GUILayout.Space(6);
-        GUILayout.Label("Стрелки — двигать по X/Y,   PageUp/PageDown — по Z", _small);
-        GUILayout.Label("I/K — наклон,   J/L — поворот,   U/O — крен (тонкая доводка)", _small);
-        GUILayout.Label("- / = — размер,   Backspace — сброс всего", _small);
-        GUILayout.Label("Shift — быстрее,   Ctrl — точнее,   Enter — вывести в консоль", _small);
-        GUILayout.Space(8);
-        GUILayout.Label("<color=#80ff90>F2 — закончить подгонку (значения уйдут в консоль)</color>", _small);
-        GUILayout.Space(6);
-        GUILayout.Label("Значения нужно перенести в инспектор объекта: после выхода из игры они не сохранятся.", _small);
-
-        GUILayout.EndArea();
-    }
-
-    void DrawAmmo()
-    {
-        if (!HeldWeapon) return;
-
-        var r = new Rect(reference.x - margin - 320f, reference.y - margin - 96f, 320f, 96f);
-        GUILayout.BeginArea(r, _box);
-
-        if (HeldWeapon.Reloading)
-            GUILayout.Label("<color=#ffd070>ПЕРЕЗАРЯДКА…</color>", _title);
-        else
-        {
-            string col = HeldWeapon.Ammo == 0 ? "#ff6060"
-                       : HeldWeapon.Ammo <= HeldWeapon.magazineSize / 4 ? "#ffd070" : "#ffffff";
-            GUILayout.Label($"<color={col}>{HeldWeapon.Ammo}</color> / {HeldWeapon.magazineSize}", _title);
-        }
-
-        GUILayout.Label($"{HeldWeapon.displayName}   [R] перезарядка", _small);
-        GUILayout.EndArea();
-    }
-
-    void DrawCrosshair()
-    {
-        Color old = GUI.color;
-
-        bool flash = _hitFlash > 0f;
-        GUI.color = flash ? new Color(1f, 0.35f, 0.3f, 1f) : new Color(1f, 1f, 1f, 0.65f);
-
-        float cx = reference.x * 0.5f, cy = reference.y * 0.5f;
-        float gap = 8f, len = flash ? 16f : 12f, w = 2f;
-
-        GUI.DrawTexture(new Rect(cx - gap - len, cy - w * 0.5f, len, w), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(cx + gap,       cy - w * 0.5f, len, w), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(cx - w * 0.5f, cy - gap - len, w, len), Texture2D.whiteTexture);
-        GUI.DrawTexture(new Rect(cx - w * 0.5f, cy + gap,       w, len), Texture2D.whiteTexture);
-
-        GUI.color = old;
-    }
-
     // ===== ввод =====
 
     bool InteractPressed()
@@ -751,12 +562,13 @@ public class ShootingRange : MonoBehaviour
 #endif
     }
 
-    bool EscapePressed()
+    /// Выход из тира и досрочное завершение зачёта. Escape не трогаем — он открывает меню паузы.
+    bool LeavePressed()
     {
 #if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
+        return Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame;
 #else
-        return Input.GetKeyDown(KeyCode.Escape);
+        return Input.GetKeyDown(KeyCode.Q);
 #endif
     }
 }

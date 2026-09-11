@@ -53,7 +53,7 @@ public class AudioManager : MonoBehaviour
 
         I = this;
         transform.SetParent(null);
-        DontDestroyOnLoad(gameObject);
+        //DontDestroyOnLoad(gameObject);
 
         EnsureSources();
         LoadPrefs();

@@ -10,14 +10,14 @@ public static class RangeWeaponPoser
 
     // ===== начать =====
 
-    [MenuItem(Menu + "4. Поставить оружие в руки (мышкой)", true)]
+    [MenuItem(Menu + "5. Поставить оружие в руки (мышкой)", true)]
     static bool StartCheck()
     {
         var go = Selection.activeGameObject;
         return go && go.GetComponent<RangeWeapon>() && !EditorUtility.IsPersistent(go);
     }
 
-    [MenuItem(Menu + "4. Поставить оружие в руки (мышкой)", false, 4)]
+    [MenuItem(Menu + "5. Поставить оружие в руки (мышкой)", false, 5)]
     static void StartPosing()
     {
         var weapon = Selection.activeGameObject.GetComponent<RangeWeapon>();
@@ -77,10 +77,10 @@ public static class RangeWeaponPoser
 
     // ===== сохранить =====
 
-    [MenuItem(Menu + "5. Запомнить позу оружия", true)]
+    [MenuItem(Menu + "6. Запомнить позу оружия", true)]
     static bool SaveCheck() => FindPreview() != null;
 
-    [MenuItem(Menu + "5. Запомнить позу оружия", false, 5)]
+    [MenuItem(Menu + "6. Запомнить позу оружия", false, 6)]
     static void SavePose()
     {
         var preview = FindPreview();
@@ -123,7 +123,7 @@ public static class RangeWeaponPoser
     [MenuItem(Menu + "Отменить настройку позы", true)]
     static bool CancelCheck() => FindPreview() != null;
 
-    [MenuItem(Menu + "Отменить настройку позы", false, 6)]
+    [MenuItem(Menu + "Отменить настройку позы", false, 7)]
     static void Cancel()
     {
         RemovePreview();

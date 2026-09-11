@@ -24,6 +24,17 @@ public class PauseMenu : MonoBehaviour
     public PlayerInteractor interactor;
     [Tooltip("Что выключать на время паузы: игрок, камера.")]
     public List<GameObject> objectsToFreeze = new List<GameObject>();
+    
+
+    void Bind(Button b, UnityEngine.Events.UnityAction a)
+    {
+        if (!b) return;
+        b.onClick.RemoveAllListeners();
+        b.onClick.AddListener(a);
+    }
+
+    void Click() { if (AudioManager.I) AudioManager.I.Click(); }
+    void Back() { if (AudioManager.I) AudioManager.I.Back(); }
 
     [Header("Сцены")]
     public string mainMenuScene = "MainMenu";
@@ -32,6 +43,7 @@ public class PauseMenu : MonoBehaviour
 
     readonly List<MonoBehaviour> _disabled = new List<MonoBehaviour>();
 
+    
     void Awake()
     {
         if (!interactor) interactor = FindFirstObjectByType<PlayerInteractor>();
@@ -44,17 +56,8 @@ public class PauseMenu : MonoBehaviour
 
         if (pausePanel) pausePanel.SetActive(false);
         if (settingsPanel) settingsPanel.SetActive(false);
-    }
-
-    void Bind(Button b, UnityEngine.Events.UnityAction a)
-    {
-        if (!b) return;
-        b.onClick.RemoveAllListeners();
-        b.onClick.AddListener(a);
-    }
-
-    void Click() { if (AudioManager.I) AudioManager.I.Click(); }
-    void Back()  { if (AudioManager.I) AudioManager.I.Back(); }
+    }   
+    
 
     void Update()
     {
