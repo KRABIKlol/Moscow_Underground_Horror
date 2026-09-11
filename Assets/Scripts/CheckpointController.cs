@@ -41,10 +41,14 @@ public class CheckpointController : MonoBehaviour
     [Tooltip("Scanner -> table")]   public RoutePath routeToTable;
     [Tooltip("Table -> exit")]      public RoutePath routeToExit;
     [Tooltip("Anywhere -> reject")] public RoutePath routeToReject;
+    [Tooltip("Walk the reject route backwards. Lets you reuse Route_ToDesk for the way out.")]
+    public bool reverseRejectRoute = false;
 
     [Header("Systems")]
     public MetalDetectorVisual detector;
     public ItemTable table;
+    [Tooltip("Optional. Detained visitors are teleported into this cell instead of walking away.")]
+    public JailCell jail;
     public ShiftManager shift;
     public EventLog log;
 
@@ -68,6 +72,12 @@ public class CheckpointController : MonoBehaviour
 
     static System.Collections.Generic.IReadOnlyList<Transform> Way(RoutePath r) => r ? r.Points : null;
 
+    System.Collections.Generic.IReadOnlyList<Transform> RejectWay()
+    {
+        if (!routeToReject) return null;
+        return reverseRejectRoute ? routeToReject.PointsReversed : routeToReject.Points;
+    }
+
     float BannedChance => Mathf.Lerp(bannedChanceStart, bannedChanceEnd, shift ? shift.Progress : 0f);
     float BadDocChance => Mathf.Lerp(badDocChanceStart, badDocChanceEnd, shift ? shift.Progress : 0f);
 
@@ -75,6 +85,7 @@ public class CheckpointController : MonoBehaviour
     {
         if (!detector) detector = FindFirstObjectByType<MetalDetectorVisual>();
         if (!table)    table    = FindFirstObjectByType<ItemTable>();
+        if (!jail)     jail     = FindFirstObjectByType<JailCell>();
         if (!shift)    shift    = FindFirstObjectByType<ShiftManager>();
         if (!log)      log      = FindFirstObjectByType<EventLog>();
         if (!spawnPoint) spawnPoint = transform;
@@ -179,7 +190,27 @@ public class CheckpointController : MonoBehaviour
         v.GoVia(Way(routeToExit), exitPoint, () => Destroy(v.gameObject, 0.2f));
     }
 
-    /// Развернуть или задержать - доступно на любой стадии, где есть посетитель.
+    /// Задержать: нарушитель отправляется в камеру и остаётся там.
+    public void Detain()
+    {
+        if (CurrentStage == Stage.Empty || Current == null) return;
+
+        var v = Current;
+        Score(v, false);
+        Finish();
+
+        if (jail && jail.Put(v))
+        {
+            if (log) log.Add("Задержан, помещён в камеру.");
+        }
+        else
+        {
+            // камеры нет или мест не осталось - уводим как обычно
+            v.GoVia(RejectWay(), rejectPoint, () => Destroy(v.gameObject, 0.2f));
+        }
+    }
+
+    /// Развернуть - уходит обратно ко входу.
     public void Reject()
     {
         if (CurrentStage == Stage.Empty || Current == null) return;
@@ -187,7 +218,7 @@ public class CheckpointController : MonoBehaviour
         var v = Current;
         Score(v, false);
         Finish();
-        v.GoVia(Way(routeToReject), rejectPoint, () => Destroy(v.gameObject, 0.2f));
+        v.GoVia(RejectWay(), rejectPoint, () => Destroy(v.gameObject, 0.2f));
     }
 
     // ===== внутреннее =====
@@ -253,18 +284,67 @@ public class CheckpointController : MonoBehaviour
             Gizmos.DrawRay(t.position, t.forward * 0.6f);
         }
 
-        Dot(spawnPoint,   Color.yellow, 0.3f);
-        Dot(deskPoint,    Color.cyan,   0.3f);
-        Dot(scannerPoint, Color.white,  0.3f);
-        Dot(tablePoint,   Color.magenta,0.3f);
-        Dot(exitPoint,    Color.green,  0.3f);
-        Dot(rejectPoint,  Color.red,    0.3f);
+        Dot(spawnPoint,   Color.yellow,  0.3f);
+        Dot(deskPoint,    Color.cyan,    0.3f);
+        Dot(scannerPoint, Color.white,   0.3f);
+        Dot(tablePoint,   Color.magenta, 0.3f);
+        Dot(exitPoint,    Color.green,   0.3f);
+        Dot(rejectPoint,  Color.red,     0.3f);
 
-        Gizmos.color = new Color(1f, 1f, 1f, 0.35f);
-        void Line(Transform a, Transform b) { if (a && b) Gizmos.DrawLine(a.position, b.position); }
-        Line(spawnPoint, deskPoint);
-        Line(deskPoint, scannerPoint);
-        Line(scannerPoint, tablePoint);
-        Line(tablePoint, exitPoint);
+        // Настоящий путь: через путевые точки маршрута, если он назначен.
+        DrawLeg(spawnPoint,   routeToDesk,    deskPoint);
+        DrawLeg(deskPoint,    routeToScanner, scannerPoint);
+        DrawLeg(scannerPoint, routeToTable,   tablePoint);
+        DrawLeg(tablePoint,   routeToExit,    exitPoint);
+        DrawRejectLeg();
+    }
+
+    void DrawRejectLeg()
+    {
+        if (!deskPoint || !rejectPoint) return;
+
+        var pts = RejectWay();
+        bool hasRoute = pts != null && pts.Count > 0;
+
+        Gizmos.color = hasRoute
+            ? new Color(1f, 0.4f, 0.4f, 0.7f)
+            : new Color(1f, 0.55f, 0.1f, 0.7f);
+
+        Vector3 prev = deskPoint.position;
+        if (hasRoute)
+        {
+            foreach (var p in pts)
+            {
+                if (!p) continue;
+                Gizmos.DrawLine(prev, p.position);
+                prev = p.position;
+            }
+        }
+        Gizmos.DrawLine(prev, rejectPoint.position);
+    }
+
+    void DrawLeg(Transform from, RoutePath route, Transform to)
+    {
+        if (!from || !to) return;
+
+        // с маршрутом - белый, напрямую - оранжевый, чтобы сразу видеть неподключённые отрезки
+        bool hasRoute = route && route.Points.Count > 0;
+        Gizmos.color = hasRoute
+            ? new Color(1f, 1f, 1f, 0.8f)
+            : new Color(1f, 0.55f, 0.1f, 0.7f);
+
+        Vector3 prev = from.position;
+
+        if (hasRoute)
+        {
+            foreach (var p in route.Points)
+            {
+                if (!p) continue;
+                Gizmos.DrawLine(prev, p.position);
+                prev = p.position;
+            }
+        }
+
+        Gizmos.DrawLine(prev, to.position);
     }
 }

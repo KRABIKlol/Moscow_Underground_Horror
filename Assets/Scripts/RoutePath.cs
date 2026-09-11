@@ -27,6 +27,20 @@ public class RoutePath : MonoBehaviour
         }
     }
 
+    readonly List<Transform> _reversed = new List<Transform>();
+
+    /// Те же точки в обратном порядке - для пути назад.
+    public IReadOnlyList<Transform> PointsReversed
+    {
+        get
+        {
+            var pts = Points;
+            _reversed.Clear();
+            for (int i = pts.Count - 1; i >= 0; i--) _reversed.Add(pts[i]);
+            return _reversed;
+        }
+    }
+
     void OnDrawGizmos()
     {
         var pts = Points;

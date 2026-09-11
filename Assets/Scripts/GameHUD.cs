@@ -219,7 +219,7 @@ public class GameHUD : MonoBehaviour
         GUILayout.Space(16);
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Пропустить", _button, GUILayout.Height(h))) controller.LetThrough();
-        if (GUILayout.Button("Задержать",  _button, GUILayout.Height(h))) controller.Reject();
+        if (GUILayout.Button("Задержать",  _button, GUILayout.Height(h))) controller.Detain();
         GUILayout.EndHorizontal();
     }
 

@@ -19,6 +19,12 @@ public class PlayerInteractor : MonoBehaviour
     [Tooltip("Height above the visitor's feet used as the aim target.")]
     public float aimHeight = 1.2f;
 
+    [Header("Doors")]
+    [Tooltip("Look at a door and press the key to open or close it.")]
+    public bool allowDoors = true;
+    public float doorRange = 3f;
+    public LayerMask doorMask = ~0;
+
     [Header("Line of sight (optional)")]
     [Tooltip("Require nothing solid between the camera and the visitor. Needs colliders in the scene.")]
     public bool requireLineOfSight = false;
@@ -32,7 +38,10 @@ public class PlayerInteractor : MonoBehaviour
     public string keyLabel = "E";
 
     public bool PanelOpen { get; private set; }
+    /// Кадр, в котором панель закрылась. Меню паузы смотрит сюда, чтобы один Escape не сделал два действия.
+    public int LastCloseFrame { get; private set; } = -1;
     public Visitor Focused { get; private set; }
+    public Door FocusedDoor { get; private set; }
     public string Prompt { get; private set; }
 
     Camera Cam
@@ -59,8 +68,6 @@ public class PlayerInteractor : MonoBehaviour
 
     void Update()
     {
-        if (!controller) return;
-
         if (PanelOpen)
         {
             if (!StageInteractive()) { Close(); return; }
@@ -71,11 +78,32 @@ public class PlayerInteractor : MonoBehaviour
         Focused = Detect();
         Prompt = BuildPrompt();
 
-        if (!string.IsNullOrEmpty(Prompt) && InteractPressed()) Open();
+        // Посетитель важнее: дверь предлагаем, только если проверять некого.
+        FocusedDoor = (Focused == null && allowDoors) ? DetectDoor() : null;
+        if (FocusedDoor) Prompt = FocusedDoor.PromptText(keyLabel);
+
+        if (!InteractPressed()) return;
+
+        if (Focused != null) Open();
+        else if (FocusedDoor) FocusedDoor.Interact(Cam ? Cam.transform.position : transform.position);
+    }
+
+    Door DetectDoor()
+    {
+        var cam = Cam;
+        if (!cam) return null;
+
+        var ray = new Ray(cam.transform.position, cam.transform.forward);
+        if (!Physics.Raycast(ray, out var hit, doorRange, doorMask, QueryTriggerInteraction.Ignore))
+            return null;
+
+        return hit.collider.GetComponentInParent<Door>();
     }
 
     bool StageInteractive()
     {
+        if (!controller) return false;
+
         var s = controller.CurrentStage;
         return s == CheckpointController.Stage.Documents ||
                s == CheckpointController.Stage.Inspection;
@@ -83,6 +111,8 @@ public class PlayerInteractor : MonoBehaviour
 
     Visitor Detect()
     {
+        if (!controller) return null;
+
         var v = controller.Current;
         if (v == null || !StageInteractive()) return null;
 
@@ -107,7 +137,7 @@ public class PlayerInteractor : MonoBehaviour
 
     string BuildPrompt()
     {
-        if (Focused == null) return null;
+        if (Focused == null || !controller) return null;
 
         switch (controller.CurrentStage)
         {
@@ -118,7 +148,11 @@ public class PlayerInteractor : MonoBehaviour
     }
 
     public void Open()  => PanelOpen = true;
-    public void Close() => PanelOpen = false;
+    public void Close()
+    {
+        PanelOpen = false;
+        LastCloseFrame = Time.frameCount;
+    }
 
     bool InteractPressed()
     {

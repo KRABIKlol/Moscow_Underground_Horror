@@ -144,6 +144,18 @@ public class Visitor : MonoBehaviour
         SetAnimSpeed(0f);
     }
 
+    /// Мгновенно поставить в камеру и остановить.
+    public void Detain(Vector3 position, Quaternion rotation)
+    {
+        _path.Clear();
+        _pathIndex = 0;
+        _onArrive = null;
+        IsMoving = false;
+
+        transform.SetPositionAndRotation(position, rotation);
+        _finalRot = rotation;
+    }
+
     void LateUpdate()
     {
         if (!snapToGround) return;
