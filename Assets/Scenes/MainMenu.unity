@@ -3379,7 +3379,7 @@ MonoBehaviour:
   doorLocked: {fileID: 0}
   shiftStart: {fileID: 0}
   shiftEnd: {fileID: 0}
-  music: {fileID: 0}
+  music: {fileID: 8300000, guid: 6cee66cb6af6cc546990d884bf8e0cf4, type: 3}
   ambient: {fileID: 0}
   master: 1
   musicVolume: 0.4
@@ -8489,9 +8489,9 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1007114284}
+  - {fileID: 1657900466}
   - {fileID: 711985469}
   - {fileID: 347565626}
   - {fileID: 892147293}
   - {fileID: 1963457010}
-  - {fileID: 1657900466}
   - {fileID: 849293924}

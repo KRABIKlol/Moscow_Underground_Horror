@@ -17,6 +17,12 @@ public class Door : MonoBehaviour
     [Tooltip("Full open takes 1 / speed seconds.")]
     public float speed = 2f;
 
+    [Header("Взаимодействие")]
+    [Tooltip("Выключи для декоративных дверей и для тех, что открываются скриптом или триггером: " +
+             "подсказка не появится и по клавише дверь не сработает. " +
+             "Open() / Close() / SetOpen() из кода работают по-прежнему.")]
+    public bool playerCanUse = true;
+
     [Header("Behaviour")]
     public bool startOpen = false;
     public bool locked = false;
@@ -86,9 +92,10 @@ public class Door : MonoBehaviour
             Body.localPosition = _closedPos + slideOffset * e;
     }
 
-    /// Текст подсказки для интерактора.
+    /// Текст подсказки для интерактора. null — подсказку показывать не надо.
     public string PromptText(string keyLabel)
     {
+        if (!playerCanUse) return null;
         if (locked) return $"[{keyLabel}]  {lockedText}";
         return $"[{keyLabel}]  {(IsOpen ? closeText : openText)}";
     }
@@ -96,6 +103,8 @@ public class Door : MonoBehaviour
     /// Нажатие игрока. userPosition нужна, чтобы дверь распахнулась от него.
     public void Interact(Vector3 userPosition)
     {
+        if (!playerCanUse) return;
+
         if (locked)
         {
             Play(lockedClip);

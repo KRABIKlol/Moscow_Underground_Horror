@@ -5,29 +5,14 @@ using UnityEngine.SceneManagement;
 
 public class SettingsManager : MonoBehaviour
 {
-    public static SettingsManager Instance;
+    
     public TMP_Dropdown fpsDropdown;
     public TMP_Dropdown qualityDropdown;
     public Toggle vSyncT;
     public Toggle fullS;
     void Start()
     {
-        void Awake()
-        {
-            // Паттерн Singleton: проверяем, существует ли уже такой менеджер
-            if (Instance == null)
-            {
-                Instance = this;
-                // Делаем так, чтобы этот объект не удалялся при загрузке новой сцены
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                // Если дубликат уже есть (например, случайно вернулись в главное меню), уничтожаем лишний
-                Destroy(gameObject);
-                return;
-            }
-        }
+       
         if (SceneManager.GetActiveScene().name == "MainMenu")
         {
             int defaultQualityIndex = 2;

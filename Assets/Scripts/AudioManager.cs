@@ -134,4 +134,16 @@ public class AudioManager : MonoBehaviour
         PlayerPrefs.SetFloat(KeySfx,    sfxVolume);
         PlayerPrefs.Save();
     }
+    public void PauseMusicAndAmbient()
+    {
+        if (musicSource) musicSource.Pause();
+        if (ambientSource) ambientSource.Pause();
+    }
+
+    public void ResumeMusicAndAmbient()
+    {
+        if (musicSource) musicSource.UnPause();
+        if (ambientSource) ambientSource.UnPause();
+    }
 }
+

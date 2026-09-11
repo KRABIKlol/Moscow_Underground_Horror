@@ -67,12 +67,20 @@ public class PauseMenu : MonoBehaviour
         if (!IsPaused && interactor &&
             (interactor.PanelOpen || interactor.LastCloseFrame == Time.frameCount)) return;
 
-        if (IsPaused)
+        //if (IsPaused)
+        //{
+        //    // Если открыты настройки — по Esc возвращаемся в главное меню паузы.
+        //    // Сама игра с паузы по Esc больше НЕ снимается.
+        //    if (settingsPanel && settingsPanel.activeSelf)
+        //    {
+        //        Back();
+        //        ShowSettings(false);
+        //    }
+        //}
+        //else
         {
-            if (settingsPanel && settingsPanel.activeSelf) ShowSettings(false);
-            else Resume();
+            Pause();
         }
-        else Pause();
     }
 
     public void Pause()
@@ -88,6 +96,7 @@ public class PauseMenu : MonoBehaviour
 
         if (pausePanel) pausePanel.SetActive(true);
         Back();
+        AudioManager.I.PauseMusicAndAmbient();
     }
 
     public void Resume()
@@ -104,6 +113,7 @@ public class PauseMenu : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        AudioManager.I.ResumeMusicAndAmbient();
     }
 
     void ShowSettings(bool on)

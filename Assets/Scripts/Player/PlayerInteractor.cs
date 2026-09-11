@@ -97,7 +97,9 @@ public class PlayerInteractor : MonoBehaviour
         if (!Physics.Raycast(ray, out var hit, doorRange, doorMask, QueryTriggerInteraction.Ignore))
             return null;
 
-        return hit.collider.GetComponentInParent<Door>();
+        // Декоративные двери и те, что открываются скриптом, игрок не трогает.
+        var door = hit.collider.GetComponentInParent<Door>();
+        return door && door.playerCanUse ? door : null;
     }
 
     bool StageInteractive()
