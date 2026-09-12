@@ -16,7 +16,7 @@ MonoBehaviour:
   - displayName: "\u041A\u043B\u044E\u0447\u0438"
     banned: 0
     triggersDetector: 1
-    prefab: {fileID: 2860154413492794093, guid: 92405eb09035ba645b419390bb3cd8da, type: 3}
+    prefab: {fileID: 5979340348011164049, guid: ea3d69fd49f0d8343a1a44bc129e9e53, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041C\u043E\u0431\u0438\u043B\u044C\u043D\u044B\u0439 \u0442\u0435\u043B\u0435\u0444\u043E\u043D"
@@ -28,7 +28,7 @@ MonoBehaviour:
   - displayName: "\u041A\u043E\u0448\u0435\u043B\u0451\u043A"
     banned: 0
     triggersDetector: 1
-    prefab: {fileID: -6689036041284674117, guid: 1586b7abb7f79024e83b9e2601008f18, type: 3}
+    prefab: {fileID: 8799567916066884693, guid: a847df375f60daf46ae77699cfb68665, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0411\u0443\u0442\u044B\u043B\u043A\u0430 \u0432\u043E\u0434\u044B"
@@ -46,91 +46,91 @@ MonoBehaviour:
   - displayName: "\u041D\u0430\u0443\u0448\u043D\u0438\u043A\u0438"
     banned: 0
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: 7064686431802158851, guid: 831202a1d8812c34bb672e12bfaf948b, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041F\u0430\u0447\u043A\u0430 \u0441\u0438\u0433\u0430\u0440\u0435\u0442"
     banned: 0
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: 919132149155446097, guid: ab7f7512b5608a845aa310c9c2f30114, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041A\u043D\u0438\u0433\u0430"
     banned: 0
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: 4224301597616553461, guid: 3d090169e9482034cbde0768e23fb369, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0422\u0435\u0440\u043C\u043E\u0441"
     banned: 0
     triggersDetector: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 7836342111658390403, guid: d41e79cb4465b0546bf5d0d733d51103, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041F\u0440\u043E\u0435\u0437\u0434\u043D\u043E\u0439"
     banned: 0
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: 2754985398236781733, guid: bd4f8049c4ca8be408448636d4026ce7, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0421\u043A\u043B\u0430\u0434\u043D\u043E\u0439 \u043D\u043E\u0436"
     banned: 1
     triggersDetector: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 3363894557131445471, guid: 1ef298a285f8ef44eb8fe48cb381a3fb, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041E\u0442\u0432\u0451\u0440\u0442\u043A\u0430"
     banned: 1
     triggersDetector: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 919132149155446097, guid: a394e556a504f6649b4172ae5882c1be, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041C\u043E\u043D\u0442\u0438\u0440\u043E\u0432\u043A\u0430"
     banned: 1
     triggersDetector: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 6348651461380675792, guid: f520b218c59be7d49899b49e01017e85, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041A\u0430\u0441\u0442\u0435\u0442"
     banned: 1
     triggersDetector: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 8839615327028994130, guid: 63556ca50e56b4248b4a849684086642, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u042D\u043B\u0435\u043A\u0442\u0440\u043E\u0448\u043E\u043A\u0435\u0440"
     banned: 1
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: 8632129328471878478, guid: 9697286d9b167df40bf36a3829ede5a1, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0422\u0440\u0430\u0432\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438\u0439
       \u043F\u0438\u0441\u0442\u043E\u043B\u0435\u0442"
     banned: 1
     triggersDetector: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 3149794249271622232, guid: 49ee499cb21ef45499b28419b31aad84, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0413\u0430\u0437\u043E\u0432\u044B\u0439 \u0431\u0430\u043B\u043B\u043E\u043D\u0447\u0438\u043A"
     banned: 1
     triggersDetector: 1
-    prefab: {fileID: 0}
+    prefab: {fileID: 837234218646667934, guid: e4f54a2472e871b4ab6a334f5b08bcac, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0421\u0432\u0451\u0440\u0442\u043E\u043A \u0432 \u0444\u043E\u043B\u044C\u0433\u0435"
     banned: 1
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: -6689036041284674117, guid: 2e1824d08d793ba49b8f0799be3c5391, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041F\u0430\u043A\u0435\u0442 \u0441 \u043F\u043E\u0440\u043E\u0448\u043A\u043E\u043C"
     banned: 1
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: 919132149155446097, guid: 69118d04087e0ee49a56333325dac535, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u0421\u0442\u0435\u043A\u043B\u044F\u043D\u043D\u0430\u044F \u0431\u0443\u0442\u044B\u043B\u043A\u0430"
     banned: 1
     triggersDetector: 0
-    prefab: {fileID: 0}
+    prefab: {fileID: 4458593308837833467, guid: c2c4af8737234444f95b67ffdeb2e8f7, type: 3}
     icon: {fileID: 0}
     note: 

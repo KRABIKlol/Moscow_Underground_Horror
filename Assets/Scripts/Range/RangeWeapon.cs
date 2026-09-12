@@ -58,11 +58,31 @@ public class RangeWeapon : MonoBehaviour
     public float recoilRise = 4f;
     public float recoilReturn = 10f;
 
-    [Header("Звук и эффекты — можно не заполнять")]
+    [Header("ЗВУКИ ОРУЖИЯ — сюда кинуть свои клипы")]
+    [Tooltip("Выстрел. Положи несколько вариантов — на каждый выстрел берётся случайный, " +
+             "и очередь перестаёт звучать как один и тот же сэмпл. Если пусто, берётся Fire Clip ниже.")]
+    public AudioClip[] fireClips = new AudioClip[0];
+    [Tooltip("Один выстрел, если набор вариантов не нужен.")]
     public AudioClip fireClip;
+    [Tooltip("Хвост выстрела: эхо помещения. Играет одновременно с выстрелом, отдельной громкостью.")]
+    public AudioClip tailClip;
+    [Range(0f, 1f)] public float tailVolume = 0.5f;
+    [Tooltip("Щелчок по пустому магазину.")]
     public AudioClip emptyClip;
+    [Tooltip("Перезарядка.")]
     public AudioClip reloadClip;
+
+    [Header("Настройки звука")]
     [Range(0f, 1f)] public float volume = 0.7f;
+    [Tooltip("Разброс высоты тона на каждый выстрел. 0 — мёртвая повторяемость, 0.06 — живо, 0.15 — заметно.")]
+    [Range(0f, 0.3f)] public float pitchJitter = 0.06f;
+    [Tooltip("Сколько выстрелов может звучать одновременно. При 600 в/мин хвосты накладываются, " +
+             "и одного источника мало.")]
+    [Range(1, 8)] public int voices = 4;
+    [Tooltip("Подчиняться ползунку громкости эффектов из настроек (AudioManager).")]
+    public bool useSfxVolume = true;
+
+    [Header("Эффекты")]
     public ParticleSystem muzzleFlash;
 
     [Header("Клавиши (старый Input Manager)")]
@@ -86,7 +106,9 @@ public class RangeWeapon : MonoBehaviour
 
     Camera _cam;
     Transform _ignoreRoot;
-    AudioSource _audio;
+    AudioSource[] _voices;
+    AudioSource _tailVoice;
+    int _voiceIndex;
     float _nextShot, _reloadLeft, _kick, _rise, _bloom;
     Quaternion _autoRot = Quaternion.identity;
     Vector3 _autoPos, _heldScale = Vector3.one;
@@ -99,13 +121,77 @@ public class RangeWeapon : MonoBehaviour
     void Awake()
     {
         Ammo = magazineSize;
+    }
 
-        if (fireClip || emptyClip || reloadClip)
+    // ===== звук =====
+
+    /// Голоса лежат на отдельном дочернем объекте: одного источника на очередь не хватает,
+    /// выстрелы должны накладываться друг на друга, а не обрывать предыдущий.
+    void EnsureVoices()
+    {
+        if (_voices != null && _voices.Length == Mathf.Max(1, voices)) return;
+
+        var host = transform.Find("WeaponAudio");
+        if (!host)
         {
-            _audio = GetComponent<AudioSource>();
-            if (!_audio) _audio = gameObject.AddComponent<AudioSource>();
-            _audio.playOnAwake = false;
-            _audio.spatialBlend = 0f;   // оружие в руках, звук не позиционируем
+            var go = new GameObject("WeaponAudio");
+            go.transform.SetParent(transform, false);
+            host = go.transform;
+        }
+
+        foreach (var old in host.GetComponents<AudioSource>()) Destroy(old);
+
+        int count = Mathf.Max(1, voices);
+        _voices = new AudioSource[count];
+        for (int i = 0; i < count; i++) _voices[i] = NewVoice(host.gameObject);
+
+        _tailVoice = NewVoice(host.gameObject);
+    }
+
+    static AudioSource NewVoice(GameObject host)
+    {
+        var src = host.AddComponent<AudioSource>();
+        src.playOnAwake = false;
+        src.loop = false;
+        src.spatialBlend = 0f;   // оружие в руках, звук не позиционируем
+        return src;
+    }
+
+    float Loudness(float own)
+    {
+        float sfx = useSfxVolume && AudioManager.I ? AudioManager.I.sfxVolume : 1f;
+        return Mathf.Clamp01(own * sfx);
+    }
+
+    AudioClip PickFireClip()
+    {
+        if (fireClips != null && fireClips.Length > 0)
+        {
+            var picked = fireClips[UnityEngine.Random.Range(0, fireClips.Length)];
+            if (picked) return picked;
+        }
+        return fireClip;
+    }
+
+    void PlayShotSound()
+    {
+        var clip = PickFireClip();
+        if (!clip && !tailClip) return;
+
+        EnsureVoices();
+
+        if (clip)
+        {
+            _voiceIndex = (_voiceIndex + 1) % _voices.Length;
+            var voice = _voices[_voiceIndex];
+            voice.pitch = 1f + UnityEngine.Random.Range(-pitchJitter, pitchJitter);
+            voice.PlayOneShot(clip, Loudness(volume));
+        }
+
+        if (tailClip && _tailVoice)
+        {
+            _tailVoice.pitch = 1f;
+            _tailVoice.PlayOneShot(tailClip, Loudness(volume * tailVolume));
         }
     }
 
@@ -247,7 +333,7 @@ public class RangeWeapon : MonoBehaviour
         Ammo--;
         _nextShot = Time.time + 60f / Mathf.Max(1f, fireRate);
 
-        Play(fireClip);
+        PlayShotSound();
         if (muzzleFlash) muzzleFlash.Play();
 
         _kick = recoilKick;
@@ -408,14 +494,13 @@ public class RangeWeapon : MonoBehaviour
     void Play(AudioClip clip)
     {
         if (!clip) return;
-        if (!_audio)
-        {
-            _audio = GetComponent<AudioSource>();
-            if (!_audio) _audio = gameObject.AddComponent<AudioSource>();
-            _audio.playOnAwake = false;
-            _audio.spatialBlend = 0f;
-        }
-        _audio.PlayOneShot(clip, volume);
+
+        EnsureVoices();
+        _voiceIndex = (_voiceIndex + 1) % _voices.Length;
+
+        var voice = _voices[_voiceIndex];
+        voice.pitch = 1f;
+        voice.PlayOneShot(clip, Loudness(volume));
     }
 
     // ===== ввод =====
