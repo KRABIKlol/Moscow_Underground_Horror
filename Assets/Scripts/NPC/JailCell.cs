@@ -1,18 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Камера для задержанных: держит места и расставляет по ним нарушителей.
 public class JailCell : MonoBehaviour
 {
-    [Tooltip("Leave empty to use this object's children as cell slots, in hierarchy order.")]
+    
     public List<Transform> slots = new List<Transform>();
 
-    [Header("Behaviour")]
-    [Tooltip("When every slot is taken, the oldest detainee is removed to free one.")]
+    
     public bool recycleWhenFull = true;
-    [Tooltip("Random yaw spread so detainees do not stand like clones, degrees.")]
+    
     public float randomYaw = 25f;
-    [Tooltip("Parent detainees to the cell so they travel with it if you move the object.")]
+    
     public bool parentToCell = true;
 
     readonly List<Transform> _cache = new List<Transform>();
@@ -42,17 +40,11 @@ public class JailCell : MonoBehaviour
         }
     }
 
-    /// Посадить задержанного. false - мест нет.
     public bool Put(Visitor v)
     {
         if (!v) return false;
 
-        var s = Slots;
-        if (s.Count == 0)
-        {
-            Debug.LogWarning("[JailCell] Нет мест: добавь пустышки внутрь объекта камеры.", this);
-            return false;
-        }
+        var s = Slots;        
 
         if (_occupants == null || _occupants.Length != s.Count)
             _occupants = new Visitor[s.Count];
@@ -80,7 +72,6 @@ public class JailCell : MonoBehaviour
         return true;
     }
 
-    [ContextMenu("Clear Cell")]
     public void Clear()
     {
         if (_occupants == null) return;

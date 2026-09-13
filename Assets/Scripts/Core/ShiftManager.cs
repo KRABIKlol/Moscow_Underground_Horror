@@ -1,22 +1,19 @@
 using System;
 using UnityEngine;
 
-/// Смена: таймер, ошибки, счёт, нарастание сложности, итоговая оценка.
 public class ShiftManager : MonoBehaviour
 {
-    [Header("Shift")]
-    [Tooltip("Real seconds the shift lasts.")]
+   
     public float shiftDuration = 300f;
-    [Tooltip("In-game clock start, hours.")]
+   
     public int clockStartHour = 8;
-    [Tooltip("How many in-game hours the shift covers, for the displayed clock.")]
+ 
     public float clockHours = 8f;
 
-    [Header("Rules")]
+ 
     public int maxMistakes = 3;
     public bool endShiftOnMistakeLimit = true;
 
-    [Header("State (read only)")]
     public int checkedCount;
     public int correctDecisions;
     public int mistakes;
@@ -27,7 +24,6 @@ public class ShiftManager : MonoBehaviour
 
     public float TimeLeft { get; private set; }
 
-    /// 0 в начале смены, 1 в конце. Используется для роста сложности.
     public float Progress => shiftDuration <= 0f ? 1f : Mathf.Clamp01(1f - TimeLeft / shiftDuration);
 
     public float Accuracy => checkedCount == 0 ? 0f : (float)correctDecisions / checkedCount;
@@ -41,7 +37,6 @@ public class ShiftManager : MonoBehaviour
         }
     }
 
-    /// Внутриигровые часы, например 13:24.
     public string ClockString
     {
         get
@@ -70,7 +65,7 @@ public class ShiftManager : MonoBehaviour
 
     public event Action OnShiftStarted;
     public event Action OnShiftFinished;
-    public event Action<bool> OnDecision;   // true = верно
+    public event Action<bool> OnDecision;   
 
     EventLog _log;
 
@@ -78,7 +73,7 @@ public class ShiftManager : MonoBehaviour
 
     void Start() => StartShift();
 
-    [ContextMenu("Start Shift")]
+
     public void StartShift()
     {
         checkedCount = 0;
@@ -105,7 +100,6 @@ public class ShiftManager : MonoBehaviour
         }
     }
 
-    /// Зарегистрировать решение игрока по посетителю.
     public void RegisterDecision(bool correct, string description)
     {
         if (!Running) return;

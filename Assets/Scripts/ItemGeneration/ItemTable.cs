@@ -1,23 +1,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Стол досмотра: раскладывает вещи посетителя и убирает их.
 public class ItemTable : MonoBehaviour
 {
-    [Header("Layout")]
-    [Tooltip("Left edge of the layout. Right axis = along the table, forward = deeper rows.")]
     public Transform origin;
     public float spacing = 0.3f;
     public float rowSpacing = 0.28f;
     public int perRow = 4;
     public float dropHeight = 0.02f;
 
-    [Header("Look")]
     public bool randomYaw = true;
-    [Tooltip("Kinematic so items do not roll off the table.")]
+    
     public bool freezePhysics = true;
 
-    [Header("Placeholder")]
     public GameObject fallbackPrefab;
     public Vector3 placeholderSize = new Vector3(0.14f, 0.06f, 0.2f);
 

@@ -1,14 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Пробоины от пуль. Ничего настраивать не нужно: если не задан свой префаб,
-/// метка рисуется сгенерированным в рантайме тёмным пятном.
 public static class ImpactMarks
 {
-    /// Сколько отметок висит одновременно; самые старые переиспользуются.
+    
     public static int maxMarks = 80;
 
-    /// Необязательный собственный префаб пробоины. Ставится из ShootingRange.
+   
     public static GameObject customPrefab;
 
     static Mesh _quad;
@@ -38,12 +36,11 @@ public static class ImpactMarks
             mark = Create();
         }
 
-        // Метки живут в мире, а не на объекте: мишени в тире не двигаются,
-        // зато пробоина не ломается от масштаба родителя.
+       
         mark.transform.SetParent(null, true);
         mark.transform.position = hit.point + hit.normal * 0.006f;
         mark.transform.rotation = Quaternion.LookRotation(-hit.normal, Vector3.up);
-        if (!customPrefab) mark.transform.localScale = Vector3.one * size;   // свой префаб оставляем как есть
+        if (!customPrefab) mark.transform.localScale = Vector3.one * size;   
         mark.SetActive(true);
 
         _pool.Enqueue(mark);
@@ -99,11 +96,10 @@ public static class ImpactMarks
             var tex = MakeHoleTexture(64);
             if (_material.HasProperty("_MainTex")) _material.SetTexture("_MainTex", tex);
             if (_material.HasProperty("_BaseMap")) _material.SetTexture("_BaseMap", tex);
-            _material.renderQueue = 3050;   // поверх непрозрачной геометрии
+            _material.renderQueue = 3050; 
         }
     }
 
-    /// Тёмное пятно с мягкими краями — обычная пробоина в бумаге.
     static Texture2D MakeHoleTexture(int size)
     {
         var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };

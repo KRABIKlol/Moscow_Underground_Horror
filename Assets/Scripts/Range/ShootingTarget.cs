@@ -1,21 +1,16 @@
 using System;
 using UnityEngine;
 
-/// Мишень стрельбища: бумажный щит или манекен. Любое попадание = очко.
-/// Коллайдер добавляется сам, если на объекте его нет.
 [DisallowMultipleComponent]
 public class ShootingTarget : MonoBehaviour
 {
-    [Header("Мишень")]
     public string displayName = "Мишень";
-    [Tooltip("Сколько очков даёт одно попадание.")]
+
     public int points = 1;
 
-    [Header("Звук — можно не заполнять")]
     public AudioClip hitClip;
     [Range(0f, 1f)] public float volume = 0.8f;
-
-    /// Слушает стрельбище: мишень, точка попадания.
+        
     public static event Action<ShootingTarget, RaycastHit> OnAnyHit;
 
     public int Hits { get; private set; }
@@ -31,8 +26,6 @@ public class ShootingTarget : MonoBehaviour
 
         OnAnyHit?.Invoke(this, hit);
     }
-
-    /// Если на мишени нет ни одного коллайдера — вешаем бокс по габаритам моделей.
     public void EnsureCollider()
     {
         if (GetComponentInChildren<Collider>(true) != null) return;

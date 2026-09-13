@@ -7,35 +7,31 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour
 {
-    [Header("Камера (обзор)")]
-    [Tooltip("Камера от первого лица. Если не назначить вручную, будет найдена автоматически среди дочерних объектов.")]
+    
     [SerializeField] private Camera playerCamera;
     [SerializeField] private float mouseSensitivity = 2f;
     [SerializeField] private float minPitch = -85f;
     [SerializeField] private float maxPitch = 85f;
 
-    [Header("Скорость передвижения")]
+    
     [SerializeField] private float walkSpeed = 5f;
     [SerializeField] private float sprintSpeed = 8f;
     [SerializeField] private float crouchSpeed = 2.5f;
-    [Tooltip("Как быстро текущая скорость нарастает/тормозит при смене режима движения")]
+   
     [SerializeField] private float acceleration = 12f;
 
-    [Header("Прыжок и гравитация")]
     [SerializeField] private float jumpHeight = 1.2f;
     [SerializeField] private float gravity = -20f;
 
-    [Header("Присед")]
     [SerializeField] private float standingHeight = 1.8f;
     [SerializeField] private float crouchHeight = 1.0f;
     [SerializeField] private float crouchTransitionSpeed = 8f;
-    [Tooltip("Если включено — присед переключается нажатием клавиши, а не удержанием")]
+    
     [SerializeField] private bool crouchIsToggle = false;
-    [Tooltip("Клавиша приседа для старого Input Manager (в новом Input System используется левый Ctrl)")]
+    
     [SerializeField] private KeyCode crouchKeyLegacy = KeyCode.LeftControl;
 
-    [Header("Аниматор (необязательно)")]
-    [Tooltip("Animator модели персонажа (например, охранника). Если не назначить — анимация просто не будет обновляться.")]
+  
     [SerializeField] private Animator animator;
     [SerializeField] private string speedParam = "Speed";
     [SerializeField] private string groundedParam = "IsGrounded";
@@ -70,40 +66,12 @@ public class FirstPersonController : MonoBehaviour
     }
 
     private void Update()
-    {
-        HandleEscape();
+    {       
         HandleMouseLook();
         HandleCrouch();
         HandleMovement();
     }
-
-    private void HandleEscape()
-    {
-        // Удобно для тестирования в редакторе: Esc возвращает курсор мыши.
-#if ENABLE_INPUT_SYSTEM
-        bool escPressed = Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame;
-#else
-        bool escPressed = Input.GetKeyDown(KeyCode.Escape);
-#endif
-        if (escPressed)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else if (Cursor.lockState == CursorLockMode.None)
-        {
-#if ENABLE_INPUT_SYSTEM
-            bool clicked = Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame;
-#else
-            bool clicked = Input.GetMouseButtonDown(0);
-#endif
-            if (clicked)
-            {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
-        }
-    }
+    
 
     private void HandleMouseLook()
     {
@@ -183,9 +151,6 @@ public class FirstPersonController : MonoBehaviour
         Vector3 inputDir = Vector3.ClampMagnitude(new Vector3(inputX, 0f, inputZ), 1f);
         Vector3 worldDir = transform.TransformDirection(inputDir);
 
-        // Целевая скорость учитывает величину ввода — если WASD не нажаты, она равна 0,
-        // а не "разгоняется" впустую только от удержания Shift. Это важно и для движения,
-        // и для параметра Speed, который пойдёт в аниматор.
         float maxSpeed = isCrouching ? crouchSpeed : (sprintHeld ? sprintSpeed : walkSpeed);
         float targetSpeed = maxSpeed * inputDir.magnitude;
         currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * acceleration);
@@ -195,7 +160,7 @@ public class FirstPersonController : MonoBehaviour
         if (grounded)
         {
             if (velocity.y < 0f)
-                velocity.y = -2f; // прижимает к земле, чтобы isGrounded не "мигал"
+                velocity.y = -2f; 
 
             if (jumpPressed && !isCrouching)
             {
@@ -216,8 +181,6 @@ public class FirstPersonController : MonoBehaviour
     {
         if (animator == null) return;
 
-        // Speed — обычная скорость персонажа (м/с). Пороги в Blend Tree можно
-        // задавать теми же числами, что стоят в полях Walk/Sprint/Crouch Speed выше.
         animator.SetFloat(speedParam, currentSpeed, 0.15f, Time.deltaTime);
         animator.SetBool(groundedParam, grounded);
         animator.SetBool(crouchParam, isCrouching);

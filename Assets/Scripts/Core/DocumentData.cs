@@ -1,29 +1,26 @@
 using UnityEngine;
-
-/// Удостоверение посетителя. Все нарушения видны прямо в полях - игрок может решить сам.
 [System.Serializable]
 public class DocumentData
 {
     public string fullName;
-    public string birthDate;     // дд.мм.гггг
-    public string documentId;    // МУ-XXXXXX
-    public string expiryDate;    // дд.мм.гггг
-    public string purpose;       // цель визита
+    public string birthDate;     
+    public string documentId;    
+    public string expiryDate;    
+    public string purpose;       
 
     public bool valid;
-    [Tooltip("Human readable defect. Empty when the document is clean.")]
+   
     public string problem;
 }
 
 public static class DocumentGenerator
 {
-    // Игровая "сегодняшняя" дата. Игрок сверяет с ней срок действия.
     public static int Day = 14, Month = 11, Year = 2026;
     public static string Today => $"{Day:00}.{Month:00}.{Year}";
 
     static readonly string[] Male    = { "Андрей", "Сергей", "Дмитрий", "Николай", "Виктор", "Олег", "Павел", "Игорь" };
     static readonly string[] Female  = { "Ольга", "Ирина", "Марина", "Татьяна", "Елена", "Наталья", "Светлана" };
-    static readonly string[] Surname = { "Соколов", "Титов", "Ерохин", "Гаврилов", "Панкратов", "Лебедев", "Зимин", "Носов" };
+    static readonly string[] Surname = { "Соколов", "Титов", "Ерохин", "Гаврилов", "Панкратов", "Лебедев", "Зимин", "Носов", "Казанцев" };
 
     static readonly string[] Purposes = {
         "Плановое обслуживание", "Доставка", "Совещание", "Подрядные работы",
@@ -46,7 +43,6 @@ public static class DocumentGenerator
         if (Random.value < badChance)
             defect = (Defect)Random.Range(1, 5);
 
-        // по умолчанию всё чистое
         d.birthDate   = Date(Random.Range(1960, Year - 25));
         d.documentId  = "МУ-" + Random.Range(100000, 999999);
         d.expiryDate  = Date(Random.Range(Year + 1, Year + 5));
@@ -66,8 +62,8 @@ public static class DocumentGenerator
 
             case Defect.BadNumber:
                 d.documentId = Random.value < 0.5f
-                    ? "МУ-" + Random.Range(100, 9999)                  // слишком короткий
-                    : "XX-" + Random.Range(100000, 999999);            // не тот префикс
+                    ? "МУ-" + Random.Range(100, 9999)                  
+                    : "XX-" + Random.Range(100000, 999999);            
                 d.problem = "Номер не соответствует формату МУ-XXXXXX";
                 break;
 

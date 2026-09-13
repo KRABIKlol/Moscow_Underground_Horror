@@ -3,56 +3,50 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Пост охраны. Цикл: посетитель -> документы -> рамка -> стол с вещами -> решение игрока.
 public class CheckpointController : MonoBehaviour
 {
     public enum Stage { Empty, Approaching, Documents, Scanning, ScanResult, Inspection }
 
-    [Header("Visitors")]
     public List<GameObject> prefabs = new List<GameObject>();
     public ItemDatabase itemDatabase;
     public Vector2Int itemCount = new Vector2Int(1, 3);
     public Vector2 speedRange = new Vector2(1.1f, 1.6f);
     public Vector2 scaleRange = new Vector2(0.95f, 1.05f);
 
-    [Header("Difficulty (start of shift -> end of shift)")]
     [Range(0f, 1f)] public float bannedChanceStart = 0.25f;
     [Range(0f, 1f)] public float bannedChanceEnd = 0.55f;
     [Range(0f, 1f)] public float badDocChanceStart = 0.20f;
     [Range(0f, 1f)] public float badDocChanceEnd = 0.50f;
 
-    [Header("Animation")]
+  
     public RuntimeAnimatorController animatorController;
     public bool overrideExistingController;
-    [Tooltip("Optional trigger fired when the visitor stops inside the frame.")]
+   
     public string scanTrigger = "Scan";
 
-    [Header("Points")]
-    public Transform spawnPoint;     // откуда выходит
-    public Transform deskPoint;      // окно, показывает документ
-    public Transform scannerPoint;   // внутри рамки
-    public Transform tablePoint;     // стол досмотра за рамкой
-    public Transform exitPoint;      // прошёл
-    public Transform rejectPoint;    // развернули
+    
+    public Transform spawnPoint;     
+    public Transform deskPoint;      
+    public Transform scannerPoint;   
+    public Transform tablePoint;    
+    public Transform exitPoint;      
+    public Transform rejectPoint;    
 
-    [Header("Routes (optional - leave empty to walk straight)")]
-    [Tooltip("Spawn -> desk")]      public RoutePath routeToDesk;
-    [Tooltip("Desk -> scanner")]    public RoutePath routeToScanner;
-    [Tooltip("Scanner -> table")]   public RoutePath routeToTable;
-    [Tooltip("Table -> exit")]      public RoutePath routeToExit;
-    [Tooltip("Anywhere -> reject")] public RoutePath routeToReject;
-    [Tooltip("Walk the reject route backwards. Lets you reuse Route_ToDesk for the way out.")]
+    public RoutePath routeToDesk;
+    public RoutePath routeToScanner;
+    public RoutePath routeToTable;
+    public RoutePath routeToExit;
+    public RoutePath routeToReject;
+    
     public bool reverseRejectRoute = false;
 
-    [Header("Systems")]
     public MetalDetectorVisual detector;
     public ItemTable table;
-    [Tooltip("Optional. Detained visitors are teleported into this cell instead of walking away.")]
+    
     public JailCell jail;
     public ShiftManager shift;
     public EventLog log;
 
-    [Header("Timings")]
     public float scanDuration = 1.5f;
     public float resultHold = 0.8f;
     public float firstDelay = 1.5f;
@@ -94,14 +88,7 @@ public class CheckpointController : MonoBehaviour
         if (table) table.Clear();
 
         prefabs.RemoveAll(p => p == null);
-        if (prefabs.Count == 0)
-        {
-            Debug.LogError("[Checkpoint] Prefabs list is empty - nobody to spawn.", this);
-            return;
-        }
-        if (!itemDatabase)
-            Debug.LogWarning("[Checkpoint] No Item Database assigned - bags will be empty.", this);
-
+        
         if (shift) shift.OnShiftFinished += HandleShiftFinished;
 
         StartCoroutine(SpawnAfter(firstDelay));
@@ -122,7 +109,6 @@ public class CheckpointController : MonoBehaviour
         if (detector) detector.SetIdle();
     }
 
-    // ===== спавн =====
 
     IEnumerator SpawnAfter(float delay)
     {
@@ -131,7 +117,7 @@ public class CheckpointController : MonoBehaviour
         SpawnVisitor();
     }
 
-    [ContextMenu("Spawn Visitor Now")]
+
     public void SpawnVisitor()
     {
         if (Current != null || prefabs.Count == 0) return;
@@ -156,7 +142,7 @@ public class CheckpointController : MonoBehaviour
         CurrentStage = Stage.Approaching;
         OnVisitorSpawned?.Invoke(v);
 
-        // 1. идёт к окну и показывает документ
+     
         v.GoVia(Way(routeToDesk), deskPoint, () =>
         {
             if (Current != v) return;
@@ -166,9 +152,7 @@ public class CheckpointController : MonoBehaviour
         });
     }
 
-    // ===== действия игрока =====
-
-    /// Документы приняты - отправить к рамке.
+    
     public void SendToScanner()
     {
         if (CurrentStage != Stage.Documents) return;
@@ -179,7 +163,7 @@ public class CheckpointController : MonoBehaviour
         v.GoVia(Way(routeToScanner), scannerPoint, () => StartCoroutine(ScanRoutine(v)));
     }
 
-    /// Пропустить - доступно после стола.
+  
     public void LetThrough()
     {
         if (CurrentStage != Stage.Inspection) return;
@@ -190,7 +174,7 @@ public class CheckpointController : MonoBehaviour
         v.GoVia(Way(routeToExit), exitPoint, () => Destroy(v.gameObject, 0.2f));
     }
 
-    /// Задержать: нарушитель отправляется в камеру и остаётся там.
+  
     public void Detain()
     {
         if (CurrentStage == Stage.Empty || Current == null) return;
@@ -205,12 +189,11 @@ public class CheckpointController : MonoBehaviour
         }
         else
         {
-            // камеры нет или мест не осталось - уводим как обычно
+          
             v.GoVia(RejectWay(), rejectPoint, () => Destroy(v.gameObject, 0.2f));
         }
     }
 
-    /// Развернуть - уходит обратно ко входу.
     public void Reject()
     {
         if (CurrentStage == Stage.Empty || Current == null) return;
@@ -221,7 +204,7 @@ public class CheckpointController : MonoBehaviour
         v.GoVia(RejectWay(), rejectPoint, () => Destroy(v.gameObject, 0.2f));
     }
 
-    // ===== внутреннее =====
+
 
     IEnumerator ScanRoutine(Visitor v)
     {
@@ -291,7 +274,6 @@ public class CheckpointController : MonoBehaviour
         Dot(exitPoint,    Color.green,   0.3f);
         Dot(rejectPoint,  Color.red,     0.3f);
 
-        // Настоящий путь: через путевые точки маршрута, если он назначен.
         DrawLeg(spawnPoint,   routeToDesk,    deskPoint);
         DrawLeg(deskPoint,    routeToScanner, scannerPoint);
         DrawLeg(scannerPoint, routeToTable,   tablePoint);
@@ -327,7 +309,7 @@ public class CheckpointController : MonoBehaviour
     {
         if (!from || !to) return;
 
-        // с маршрутом - белый, напрямую - оранжевый, чтобы сразу видеть неподключённые отрезки
+        
         bool hasRoute = route && route.Points.Count > 0;
         Gizmos.color = hasRoute
             ? new Color(1f, 1f, 1f, 0.8f)

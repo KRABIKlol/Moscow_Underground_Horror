@@ -2,23 +2,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// Геймплейный интерфейс на Canvas: строка смены, панель проверки, журнал,
-/// подсказка взаимодействия и экран итогов. Ссылки расставляет UIBuilder.
 public class GameUI : MonoBehaviour
 {
-    [Header("Логика")]
     public CheckpointController controller;
     public ShiftManager shift;
     public EventLog log;
     public PlayerInteractor interactor;
 
-    [Header("Верхняя строка")]
     public Text clockText;
     public Text timeLeftText;
     public Text checkedText;
     public Text mistakesText;
 
-    [Header("Панель проверки")]
     public GameObject checkPanel;
     public Text panelTitle;
 
@@ -46,15 +41,12 @@ public class GameUI : MonoBehaviour
 
     public Text closeHintText;
 
-    [Header("Журнал")]
     public Text logText;
 
-    [Header("Подсказка и прицел")]
     public GameObject promptRoot;
     public Text promptText;
     public GameObject crosshair;
 
-    [Header("Итоги смены")]
     public GameObject resultsPanel;
     public Text resultsTitle;
     public Text resultsStats;
@@ -62,11 +54,9 @@ public class GameUI : MonoBehaviour
     public Button restartButton;
     public Button menuButton;
 
-    [Header("Тир (необязательно)")]
     public ShootingRange range;
     public Button rangeButton;
 
-    [Header("Сцены")]
     public string mainMenuScene = "MainMenu";
 
     readonly List<GameObject> _rows = new List<GameObject>();
@@ -282,7 +272,6 @@ public class GameUI : MonoBehaviour
         if (crosshair) crosshair.SetActive(false);
         if (!resultsPanel) return;
 
-        // Пока игрок в тире, экран итогов уходит с дороги.
         if (range && range.PlayerFree)
         {
             resultsPanel.SetActive(false);

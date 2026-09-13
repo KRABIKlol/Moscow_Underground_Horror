@@ -1,44 +1,36 @@
 using UnityEngine;
 
-/// Единая точка для звука: музыка, эмбиент, эффекты и громкости с сохранением в PlayerPrefs.
+
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager I { get; private set; }
 
-    [Header("Sources (создаются сами, если пусто)")]
     public AudioSource musicSource;
     public AudioSource ambientSource;
     public AudioSource sfxSource;
 
-    [Header("Интерфейс")]
     public AudioClip uiClick;
     public AudioClip uiBack;
     public AudioClip uiHover;
 
-    [Header("Решения охранника")]
     public AudioClip stampApprove;
     public AudioClip stampReject;
     public AudioClip mistake;
 
-    [Header("Рамка")]
     public AudioClip scanStart;
     public AudioClip scanClean;
     public AudioClip scanAlarm;
 
-    [Header("Двери")]
     public AudioClip doorOpen;
     public AudioClip doorClose;
     public AudioClip doorLocked;
 
-    [Header("Смена")]
     public AudioClip shiftStart;
     public AudioClip shiftEnd;
 
-    [Header("Фон")]
     public AudioClip music;
     public AudioClip ambient;
 
-    [Header("Громкость 0..1")]
     [Range(0f, 1f)] public float master = 1f;
     [Range(0f, 1f)] public float musicVolume = 0.4f;
     [Range(0f, 1f)] public float sfxVolume = 1f;
@@ -52,8 +44,7 @@ public class AudioManager : MonoBehaviour
         if (I && I != this) { Destroy(gameObject); return; }
 
         I = this;
-        transform.SetParent(null);
-        //DontDestroyOnLoad(gameObject);
+        transform.SetParent(null);        
 
         EnsureSources();
         LoadPrefs();
@@ -91,11 +82,10 @@ public class AudioManager : MonoBehaviour
         var src = go.AddComponent<AudioSource>();
         src.loop = loop;
         src.playOnAwake = false;
-        src.spatialBlend = 0f;      // 2D
+        src.spatialBlend = 0f;      
         return src;
     }
 
-    // ===== воспроизведение =====
 
     public void PlaySfx(AudioClip clip, float volumeScale = 1f)
     {
@@ -107,7 +97,6 @@ public class AudioManager : MonoBehaviour
     public void Back()   => PlaySfx(uiBack);
     public void Hover()  => PlaySfx(uiHover, 0.6f);
 
-    // ===== громкость =====
 
     public void SetMaster(float v) { master = Mathf.Clamp01(v); ApplyVolumes(); SavePrefs(); }
     public void SetMusic(float v)  { musicVolume = Mathf.Clamp01(v); ApplyVolumes(); SavePrefs(); }

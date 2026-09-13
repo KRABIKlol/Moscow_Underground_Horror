@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Маршрут: цепочка путевых точек. По умолчанию точками считаются дочерние объекты по порядку.
+
 public class RoutePath : MonoBehaviour
 {
     [Tooltip("Leave empty to use this object's children, in hierarchy order.")]
@@ -13,7 +13,7 @@ public class RoutePath : MonoBehaviour
 
     readonly List<Transform> _cache = new List<Transform>();
 
-    /// Точки маршрута по порядку.
+ 
     public IReadOnlyList<Transform> Points
     {
         get
@@ -29,7 +29,7 @@ public class RoutePath : MonoBehaviour
 
     readonly List<Transform> _reversed = new List<Transform>();
 
-    /// Те же точки в обратном порядке - для пути назад.
+    
     public IReadOnlyList<Transform> PointsReversed
     {
         get

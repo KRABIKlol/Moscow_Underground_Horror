@@ -10,6 +10,11 @@ public class SettingsManager : MonoBehaviour
     public TMP_Dropdown qualityDropdown;
     public Toggle vSyncT;
     public Toggle fullS;
+    public Slider masterSlider;
+    public Slider musicSlider;
+    public Slider sfxSlider;
+    bool _ready;
+
     void Start()
     {
        
@@ -32,21 +37,19 @@ public class SettingsManager : MonoBehaviour
 
     public void SetVSync(bool isEnabled)
     {
-        QualitySettings.vSyncCount = isEnabled ? 1 : 0;
-        
+        if (isEnabled)
+        {
+            QualitySettings.vSyncCount = 1;
+        }
+        else
+        {
+            QualitySettings.vSyncCount = 0;
+        }
     }
     public void SetQuality()
     {
-        int qualityIndex = qualityDropdown.value; // Получаем индекс выбранного пункта (0, 1, 2...)
-        int targetValue = 1;
-        switch (qualityIndex)
-        {
-            case 0: targetValue = 0; break;
-            case 1: targetValue = 1; break;
-            case 2: targetValue = 2; break;
-        }
-        QualitySettings.SetQualityLevel(targetValue); // Применяем уровень графики в Unity
-        Debug.Log("Установлен уровень графики (индекс): " + qualityIndex);
+        int qualityIndex = qualityDropdown.value;
+        QualitySettings.SetQualityLevel(qualityIndex);
     }
 
     public void SetFullScreen(bool isFullScreen)
@@ -72,7 +75,49 @@ public class SettingsManager : MonoBehaviour
             case 2: targetFPS = -1; break;
         }
 
-        Application.targetFrameRate = targetFPS;
-        Debug.Log("Лимит FPS установлен на: " + targetFPS);
+        Application.targetFrameRate = targetFPS;        
     }
+    
+
+    void OnEnable()
+    {
+        var am = AudioManager.I;
+
+        if (masterSlider)
+        {
+            masterSlider.SetValueWithoutNotify(am ? am.master : 1f);
+            masterSlider.onValueChanged.RemoveAllListeners();
+            masterSlider.onValueChanged.AddListener(v =>
+            {
+                if (AudioManager.I) AudioManager.I.SetMaster(v);                
+            });            
+        }
+
+        if (musicSlider)
+        {
+            musicSlider.SetValueWithoutNotify(am ? am.musicVolume : 0.4f);
+            musicSlider.onValueChanged.RemoveAllListeners();
+            musicSlider.onValueChanged.AddListener(v =>
+            {
+                if (AudioManager.I) AudioManager.I.SetMusic(v);                
+            });            
+        }
+
+        if (sfxSlider)
+        {
+            sfxSlider.SetValueWithoutNotify(am ? am.sfxVolume : 1f);
+            sfxSlider.onValueChanged.RemoveAllListeners();
+            sfxSlider.onValueChanged.AddListener(v =>
+            {
+                if (AudioManager.I)
+                {
+                    AudioManager.I.SetSfx(v);
+                    if (_ready) AudioManager.I.Hover();   
+                }                
+            });            
+        }
+        _ready = true;
+    }
+
+    void OnDisable() => _ready = false;
 }

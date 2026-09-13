@@ -5,12 +5,11 @@ public class MainMenu : MonoBehaviour
 {
     public void PlayGame()
     {
-        SceneManager.LoadScene("Demo");
+        SceneManager.LoadScene("MainGame");
     }
 
     public void QuitGame()
     {
-        Debug.Log("Игра закрыта!");
         Application.Quit();
     }
 }

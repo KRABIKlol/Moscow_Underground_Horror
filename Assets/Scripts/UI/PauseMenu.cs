@@ -5,27 +5,22 @@ using UnityEngine.UI;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
-
-/// Пауза по Escape: останавливает время, освобождает курсор, открывает меню.
 public class PauseMenu : MonoBehaviour
 {
-    [Header("Панели")]
+    
     public GameObject pausePanel;
     public GameObject settingsPanel;
 
-    [Header("Кнопки")]
     public Button resumeButton;
     public Button settingsButton;
     public Button settingsBackButton;
     public Button menuButton;
     public Button quitButton;
-
-    [Header("Ссылки")]
+      
     public PlayerInteractor interactor;
-    [Tooltip("Что выключать на время паузы: игрок, камера.")]
+    
     public List<GameObject> objectsToFreeze = new List<GameObject>();
     
-
     void Bind(Button b, UnityEngine.Events.UnityAction a)
     {
         if (!b) return;
@@ -35,14 +30,12 @@ public class PauseMenu : MonoBehaviour
 
     void Click() { if (AudioManager.I) AudioManager.I.Click(); }
     void Back() { if (AudioManager.I) AudioManager.I.Back(); }
-
-    [Header("Сцены")]
+   
     public string mainMenuScene = "MainMenu";
 
     public bool IsPaused { get; private set; }
 
     readonly List<MonoBehaviour> _disabled = new List<MonoBehaviour>();
-
     
     void Awake()
     {
@@ -62,22 +55,9 @@ public class PauseMenu : MonoBehaviour
     void Update()
     {
         if (!EscapePressed()) return;
-
-        // Панель проверки главнее: Escape сначала закрывает её.
         if (!IsPaused && interactor &&
             (interactor.PanelOpen || interactor.LastCloseFrame == Time.frameCount)) return;
-
-        //if (IsPaused)
-        //{
-        //    // Если открыты настройки — по Esc возвращаемся в главное меню паузы.
-        //    // Сама игра с паузы по Esc больше НЕ снимается.
-        //    if (settingsPanel && settingsPanel.activeSelf)
-        //    {
-        //        Back();
-        //        ShowSettings(false);
-        //    }
-        //}
-        //else
+              
         {
             Pause();
         }

@@ -1,29 +1,24 @@
 using System.Collections.Generic;
 using UnityEngine;
-
-/// Рамка металлодетектора: меняет цвет и свечение по состоянию проверки.
 public class MetalDetectorVisual : MonoBehaviour
 {
     public enum DetectorState { Idle, Scanning, Clean, Alarm }
 
-    [Header("Renderers To Tint")]
-    [Tooltip("Leave empty to grab every Renderer in children.")]
+    
     public List<Renderer> targetRenderers = new List<Renderer>();
     public Light indicatorLight;
 
-    [Header("Colors")]
+   
     public Color idleColor  = new Color(0.15f, 0.45f, 0.75f);
     public Color scanColor  = new Color(1.00f, 0.75f, 0.10f);
     public Color cleanColor = new Color(0.15f, 0.90f, 0.30f);
     public Color alarmColor = new Color(1.00f, 0.10f, 0.10f);
 
-    [Header("Emission")]
     public float idleEmission = 0.6f;
     public float activeEmission = 3f;
     public float alarmBlinkSpeed = 6f;
     public float lightIntensity = 4f;
 
-    [Header("Audio (optional)")]
     public AudioSource audioSource;
     public AudioClip alarmClip;
     public AudioClip cleanClip;

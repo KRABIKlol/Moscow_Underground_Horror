@@ -4,67 +4,47 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-/// Стрельбище: открывается, когда смена закончена. Игрок идёт к стеллажу,
-/// берёт ствол по клавише E — запускается зачёт на время. В конце — таблица результата.
 public class ShootingRange : MonoBehaviour
 {
     public enum State { Closed, Ready, Countdown, Running, Results }
 
-    [Header("Ссылки (пустые поля находятся сами)")]
     public ShiftManager shift;
     public EventLog log;
     public CheckpointInputLock inputLock;
-    [Tooltip("Меню паузы. Пока оно открыто, тир не трогает курсор и не реагирует на Escape.")]
+   
     public PauseMenu pause;
     public Camera playerCamera;
-    [Tooltip("Корневой объект игрока — чтобы луч выстрела не цеплял его самого.")]
+   
     public Transform playerRoot;
 
-    [Header("Оружие и мишени")]
-    [Tooltip("Пусто — соберутся все RangeWeapon в сцене.")]
+   
     public List<RangeWeapon> weapons = new List<RangeWeapon>();
-    [Tooltip("Родитель мишеней. Каждому прямому потомку сам вешается ShootingTarget и коллайдер.")]
+   
     public Transform targetsRoot;
     public bool autoSetupTargets = true;
-    [Tooltip("Свой префаб пробоины. Пусто — рисуется простое тёмное пятно.")]
+   
     public GameObject bulletHolePrefab;
-
-    [Header("Раунд")]
     public float roundDuration = 60f;
     public float countdown = 3f;
-    [Tooltip("Открывать тир и после проваленной смены.")]
-    public bool openAfterFailedShift = true;
-    [Tooltip("Стирать пробоины перед каждым раундом.")]
+   
+    private bool openAfterFailedShift = false;
+    
     public bool clearMarksOnStart = true;
 
-    [Header("Оценка (попаданий за раунд)")]
+   
     public int hitsForS = 45;
     public int hitsForA = 35;
     public int hitsForB = 25;
     public int hitsForC = 15;
 
-    [Header("Взятие оружия")]
     public float pickupRange = 3f;
     public float pickupAngle = 50f;
     public string keyLabel = "E";
 
-    [Header("Отладка")]
-    [Tooltip("F5 в игре: досрочно закончить смену и сразу открыть тир, чтобы не ждать всю смену.")]
-    public bool debugKeyOpensRange = true;
-
-    [Header("Подгонка оружия в руках (F2 в игре)")]
-    public bool allowTweakMode = true;
-    public float tweakMoveSpeed = 0.25f;
-    public float tweakRotateSpeed = 60f;
-
-    // ===== состояние =====
-
     public State Current { get; private set; } = State.Closed;
 
-    /// Смена закончилась — на экране итогов можно предложить тир.
     public bool Available { get; private set; }
 
-    /// Идёт тренировка: игрока не надо замораживать, итоги смены прячем.
     public bool PlayerFree => Current != State.Closed;
 
     public int Shots { get; private set; }
@@ -77,10 +57,8 @@ public class ShootingRange : MonoBehaviour
     public RangeWeapon HeldWeapon { get; private set; }
     public RangeWeapon Focused { get; private set; }
 
-    /// Открыто меню паузы — тир замолкает и ни на что не реагирует.
     public bool Paused => pause && pause.IsPaused;
 
-    /// Всё, что нужно интерфейсу и чего он сам знать не может.
     public float CountdownLeft => _countLeft;
     public bool HitFlash => _hitFlash > 0f;
     public int WeaponCount => weapons.Count;
@@ -88,7 +66,6 @@ public class ShootingRange : MonoBehaviour
     public float RoundDuration => roundDuration;
     public bool SceneReady => playerCamera && weapons.Count > 0 && _targetCount > 0;
 
-    /// Подсказка над прицелом: на что смотрит игрок.
     public string Prompt => Current == State.Ready && Focused
         ? $"[{keyLabel}]  Взять {Focused.displayName}"
         : null;
@@ -96,10 +73,7 @@ public class ShootingRange : MonoBehaviour
     const string BestKey = "range_best_score";
 
     float _countLeft, _hitFlash;
-    int _targetCount;
-    public bool TweakMode { get; private set; }
-
-    // ===== жизненный цикл =====
+    int _targetCount;    
 
     void Awake()
     {
@@ -130,29 +104,7 @@ public class ShootingRange : MonoBehaviour
 
     void OnEnable() => ShootingTarget.OnAnyHit += HandleTargetHit;
     void OnDisable() => ShootingTarget.OnAnyHit -= HandleTargetHit;
-
-    void Start()
-    {
-        if (shift) shift.OnShiftFinished += HandleShiftFinished;
-        else Debug.LogWarning("[Тир] ShiftManager не найден — тир не откроется сам после смены.", this);
-
-        if (!FindFirstObjectByType<RangeUI>())
-            Debug.LogError("[Тир] В сцене нет RangeUI — интерфейса тира не будет. " +
-                           "Собери его: Tools → Стрельбище → «4. Собрать интерфейс тира».", this);
-
-        if (weapons.Count == 0)
-            Debug.LogWarning("[Тир] В сцене нет ни одного RangeWeapon — брать будет нечего. " +
-                             "Выдели модели стволов и нажми Tools → Стрельбище → «2. Выделенное — это оружие».", this);
-
-        if (!playerCamera)
-            Debug.LogError("[Тир] Не найдена камера игрока — стрелять будет нечем. " +
-                           "Заполни поле Player Camera или поставь камере тег MainCamera.", this);
-
-        CountTargets();
-        if (_targetCount == 0)
-            Debug.LogWarning("[Тир] В сцене нет ни одной ShootingTarget — попадания считаться не будут. " +
-                             "Выдели мишени и нажми Tools → Стрельбище → «3. Выделенное — это мишени».", this);
-    }
+        
 
     void OnDestroy()
     {
@@ -164,8 +116,6 @@ public class ShootingRange : MonoBehaviour
         if (shift && shift.Failed && !openAfterFailedShift) return;
         Available = true;
     }
-
-    [ContextMenu("Разметить мишени под Targets Root")]
     public void SetupTargets()
     {
         if (!targetsRoot) return;
@@ -183,31 +133,17 @@ public class ShootingRange : MonoBehaviour
             t.EnsureCollider();
         }
     }
-
-    // ===== переходы =====
-
-    /// Кнопка на экране итогов смены.
+   
     public void Open()
     {
         if (!Available) return;
 
         Current = State.Ready;
         Shots = Hits = Score = 0;
-        CountTargets();
-        if (log) log.Add("Стрельбище открыто. Возьми оружие со стойки.");
+        CountTargets();        
         ApplyCursor();
-    }
-
-    /// Открыть тир прямо сейчас, не дожидаясь конца смены (F5 и контекстное меню компонента).
-    [ContextMenu("Открыть тир сейчас")]
-    public void DebugOpen()
-    {
-        if (shift && !shift.Finished) shift.EndShift(false);
-        Available = true;
-        Open();
-    }
-
-    /// Кнопка «Ещё раз» на экране итогов зачёта.
+    }  
+   
     public void RestartRound()
     {
         if (Current != State.Results) return;
@@ -215,8 +151,7 @@ public class ShootingRange : MonoBehaviour
         CountTargets();
         ApplyCursor();
     }
-
-    /// Вернуться к итогам смены.
+  
     public void Close()
     {
         DropWeapon();
@@ -224,7 +159,6 @@ public class ShootingRange : MonoBehaviour
         ApplyCursor();
     }
 
-    /// Игрок жмёт «Начать смену заново» — тир закрывается вместе с итогами.
     public void CloseAndReset()
     {
         DropWeapon();
@@ -251,14 +185,11 @@ public class ShootingRange : MonoBehaviour
         Current = _countLeft > 0f ? State.Countdown : State.Running;
         if (Current == State.Running) HeldWeapon.FireEnabled = true;
 
-        if (log) log.Add($"Зачёт: {w.displayName}, {Mathf.RoundToInt(roundDuration)} с.");
         ApplyCursor();
     }
 
     void EndRound(bool aborted)
     {
-        if (TweakMode) { PrintHoldValues(); TweakMode = false; }
-
         if (HeldWeapon) HeldWeapon.FireEnabled = false;
         DropWeapon();
 
@@ -269,14 +200,7 @@ public class ShootingRange : MonoBehaviour
             BestScore = Score;
             PlayerPrefs.SetInt(BestKey, BestScore);
             PlayerPrefs.Save();
-        }
-
-        if (log)
-        {
-            log.Add(aborted
-                ? "Зачёт прерван."
-                : $"Тир: {Hits} попаданий, точность {Mathf.RoundToInt(Accuracy * 100f)} %, оценка {Grade}.");
-        }
+        }     
 
         ApplyCursor();
     }
@@ -299,114 +223,7 @@ public class ShootingRange : MonoBehaviour
     ShootingTarget[] AllTargets() =>
         FindObjectsByType<ShootingTarget>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
-    void HandleShot() => Shots++;
-
-    // ===== подгонка оружия в руках =====
-
-    void ToggleTweak()
-    {
-        if (!allowTweakMode || !HeldWeapon) return;
-
-        TweakMode = !TweakMode;
-        HeldWeapon.FireEnabled = !TweakMode && Current == State.Running;
-
-        if (!TweakMode) PrintHoldValues();
-    }
-
-    void PrintHoldValues()
-    {
-        var w = HeldWeapon;
-        if (!w) return;
-
-        Debug.Log($"[Тир] {w.displayName}: перенеси эти значения в инспектор префаба/объекта.\n" +
-                  $"Hold Position = ({w.holdPosition.x:0.###}, {w.holdPosition.y:0.###}, {w.holdPosition.z:0.###})\n" +
-                  $"Hold Rotation = ({w.holdRotation.x:0.#}, {w.holdRotation.y:0.#}, {w.holdRotation.z:0.#})\n" +
-                  $"Hold Scale = {w.holdScale:0.###}\n" +
-                  $"Orientation Preset = {w.orientationPreset}", w);
-    }
-
-    static void NextPreset(RangeWeapon w)
-    {
-        w.orientationPreset++;
-        if (w.orientationPreset >= RangeWeapon.PresetCount) w.orientationPreset = -1;
-        w.holdRotation = Vector3.zero;   // поправка мешала бы видеть чистый разворот
-    }
-
-    void HandleTweak()
-    {
-        var w = HeldWeapon;
-        if (!w) { TweakMode = false; return; }
-
-        float dt = Time.unscaledDeltaTime;
-        float p = tweakMoveSpeed * dt;
-        float r = tweakRotateSpeed * dt;
-        Vector3 dPos = Vector3.zero, dRot = Vector3.zero;
-        float dScale = 0f;
-        bool reset = false, flip = false, print = false;
-
-#if ENABLE_INPUT_SYSTEM
-        var kb = Keyboard.current;
-        if (kb == null) return;
-
-        if (kb.leftShiftKey.isPressed) { p *= 4f; r *= 4f; }
-        if (kb.leftCtrlKey.isPressed)  { p *= 0.25f; r *= 0.25f; }
-
-        if (kb.leftArrowKey.isPressed)  dPos.x -= p;
-        if (kb.rightArrowKey.isPressed) dPos.x += p;
-        if (kb.upArrowKey.isPressed)    dPos.y += p;
-        if (kb.downArrowKey.isPressed)  dPos.y -= p;
-        if (kb.pageUpKey.isPressed)     dPos.z += p;
-        if (kb.pageDownKey.isPressed)   dPos.z -= p;
-
-        if (kb.iKey.isPressed) dRot.x -= r;
-        if (kb.kKey.isPressed) dRot.x += r;
-        if (kb.jKey.isPressed) dRot.y -= r;
-        if (kb.lKey.isPressed) dRot.y += r;
-        if (kb.uKey.isPressed) dRot.z -= r;
-        if (kb.oKey.isPressed) dRot.z += r;
-
-        if (kb.minusKey.isPressed) dScale -= dt * 0.6f;
-        if (kb.equalsKey.isPressed) dScale += dt * 0.6f;
-
-        reset = kb.backspaceKey.wasPressedThisFrame;
-        flip  = kb.fKey.wasPressedThisFrame;
-        print = kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame;
-        if (kb.tabKey.wasPressedThisFrame) NextPreset(w);
-#else
-        if (Input.GetKey(KeyCode.LeftShift))   { p *= 4f; r *= 4f; }
-        if (Input.GetKey(KeyCode.LeftControl)) { p *= 0.25f; r *= 0.25f; }
-
-        if (Input.GetKey(KeyCode.LeftArrow))  dPos.x -= p;
-        if (Input.GetKey(KeyCode.RightArrow)) dPos.x += p;
-        if (Input.GetKey(KeyCode.UpArrow))    dPos.y += p;
-        if (Input.GetKey(KeyCode.DownArrow))  dPos.y -= p;
-        if (Input.GetKey(KeyCode.PageUp))     dPos.z += p;
-        if (Input.GetKey(KeyCode.PageDown))   dPos.z -= p;
-
-        if (Input.GetKey(KeyCode.I)) dRot.x -= r;
-        if (Input.GetKey(KeyCode.K)) dRot.x += r;
-        if (Input.GetKey(KeyCode.J)) dRot.y -= r;
-        if (Input.GetKey(KeyCode.L)) dRot.y += r;
-        if (Input.GetKey(KeyCode.U)) dRot.z -= r;
-        if (Input.GetKey(KeyCode.O)) dRot.z += r;
-
-        if (Input.GetKey(KeyCode.Minus)) dScale -= dt * 0.6f;
-        if (Input.GetKey(KeyCode.Equals)) dScale += dt * 0.6f;
-
-        reset = Input.GetKeyDown(KeyCode.Backspace);
-        flip  = Input.GetKeyDown(KeyCode.F);
-        print = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
-        if (Input.GetKeyDown(KeyCode.Tab)) NextPreset(w);
-#endif
-
-        w.holdPosition += dPos;
-        w.holdRotation += dRot;
-        w.holdScale = Mathf.Max(0.05f, w.holdScale + dScale);
-
-        if (reset) w.ResetHoldOffsets();
-        if (flip) w.flipBarrel = !w.flipBarrel;
-        if (print) PrintHoldValues();
-    }
+    void HandleShot() => Shots++;    
 
     void HandleTargetHit(ShootingTarget target, RaycastHit hit)
     {
@@ -437,11 +254,8 @@ public class ShootingRange : MonoBehaviour
         }
     }
 
-    // ===== апдейт =====
-
     void Update()
     {
-        // На паузе Escape принадлежит меню, а курсор — игроку.
         if (Paused) return;
 
         if (_hitFlash > 0f) _hitFlash -= Time.unscaledDeltaTime;
@@ -449,8 +263,8 @@ public class ShootingRange : MonoBehaviour
         switch (Current)
         {
             case State.Closed:
-                if (!Available && shift && shift.Finished) Available = true;
-                if (debugKeyOpensRange && DebugOpenPressed()) DebugOpen();
+                if (!Available && shift && shift.Finished && (openAfterFailedShift || !shift.Failed))
+                    Available = true;
                 break;
 
             case State.Ready:
@@ -460,8 +274,6 @@ public class ShootingRange : MonoBehaviour
                 break;
 
             case State.Countdown:
-                if (TweakPressed()) ToggleTweak();
-                if (TweakMode) { HandleTweak(); break; }
                 _countLeft -= Time.deltaTime;
                 if (_countLeft <= 0f)
                 {
@@ -472,8 +284,6 @@ public class ShootingRange : MonoBehaviour
                 break;
 
             case State.Running:
-                if (TweakPressed()) ToggleTweak();
-                if (TweakMode) { HandleTweak(); break; }   // таймер на паузе, пока подгоняешь
                 TimeLeft -= Time.deltaTime;
                 if (TimeLeft <= 0f) { TimeLeft = 0f; EndRound(false); }
                 else if (LeavePressed()) EndRound(true);
@@ -483,9 +293,7 @@ public class ShootingRange : MonoBehaviour
                 if (LeavePressed()) Close();
                 break;
         }
-    }
-
-    /// Курсор держим сами: FirstPersonController отпускает его по Esc, а в тире это мешает.
+    }    
     void LateUpdate()
     {
         if (Current == State.Closed || Paused) return;
@@ -495,8 +303,7 @@ public class ShootingRange : MonoBehaviour
     void ApplyCursor()
     {
         if (Current == State.Closed)
-        {
-            // Обычно курсором занимается CheckpointInputLock; если его нет — освобождаем сами.
+        {            
             if (inputLock) return;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
@@ -532,8 +339,6 @@ public class ShootingRange : MonoBehaviour
         return best;
     }
 
-    // ===== ввод =====
-
     bool InteractPressed()
     {
 #if ENABLE_INPUT_SYSTEM
@@ -541,28 +346,8 @@ public class ShootingRange : MonoBehaviour
 #else
         return Input.GetKeyDown(KeyCode.E);
 #endif
-    }
-
-    bool TweakPressed()
-    {
-        if (!allowTweakMode) return false;
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.f2Key.wasPressedThisFrame;
-#else
-        return Input.GetKeyDown(KeyCode.F2);
-#endif
-    }
-
-    bool DebugOpenPressed()
-    {
-#if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.f5Key.wasPressedThisFrame;
-#else
-        return Input.GetKeyDown(KeyCode.F5);
-#endif
-    }
-
-    /// Выход из тира и досрочное завершение зачёта. Escape не трогаем — он открывает меню паузы.
+    }    
+    
     bool LeavePressed()
     {
 #if ENABLE_INPUT_SYSTEM

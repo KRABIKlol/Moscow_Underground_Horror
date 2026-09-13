@@ -2,48 +2,43 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Посетитель КПП: ходит к точкам, носит документ и вещи, крутит анимации.
 public class Visitor : MonoBehaviour
 {
-    [Header("Movement")]
+    
     public float moveSpeed = 1.4f;
     public float turnSpeed = 540f;
     public float arriveDistance = 0.07f;
-    [Tooltip("Looser tolerance for intermediate waypoints, so the walk stays smooth.")]
     public float waypointTolerance = 0.3f;
 
-    [Header("Animation")]
+    
     public Animator animator;
-    [Tooltip("Float parameter driven by current speed.")]
+    
     public string speedParam = "Speed";
 
-    [Header("Ground")]
-    [Tooltip("Keeps the feet on the floor every frame. Needs a collider on the floor.")]
+    
     public bool snapToGround = true;
     public LayerMask groundMask = ~0;
-    [Tooltip("Ray starts this high above the current position.")]
+    
     public float groundRayUp = 0.3f;
-    [Tooltip("How far down the ray looks for the floor.")]
+    
     public float groundRayDown = 4f;
-    [Tooltip("Extra lift if the model's pivot is not exactly at the feet.")]
+   
     public float footOffset = 0f;
 
-    [Header("Interaction")]
-    [Tooltip("Adds a trigger capsule when the prefab has no collider, so the player can aim at the visitor.")]
+    
     public bool autoAddCollider = true;
     public float colliderHeight = 1.8f;
     public float colliderRadius = 0.3f;
 
-    [Header("Data")]
     public DocumentData document;
     public List<ItemDefinition> items = new List<ItemDefinition>();
 
     public bool HasBanned => items.Exists(i => i != null && i.banned);
 
-    /// Сработает ли рамка - только металл среди запрещённого.
+    
     public bool DetectorTriggers => items.Exists(i => i != null && i.banned && i.triggersDetector);
 
-    /// Правильное решение охранника: документ в порядке И нет запрещённого.
+    
     public bool ShouldBeAllowed => document != null && document.valid && !HasBanned;
 
     public bool IsMoving { get; private set; }
@@ -62,7 +57,7 @@ public class Visitor : MonoBehaviour
         if (autoAddCollider && GetComponentInChildren<Collider>() == null)
         {
             var cap = gameObject.AddComponent<CapsuleCollider>();
-            cap.isTrigger = true;              // не мешает ходить, но ловится лучом взгляда
+            cap.isTrigger = true;              
             cap.height = colliderHeight;
             cap.radius = colliderRadius;
             cap.center = new Vector3(0f, colliderHeight * 0.5f, 0f);
@@ -95,11 +90,10 @@ public class Visitor : MonoBehaviour
         return false;
     }
 
-    /// Идти прямо к точке.
     public void GoTo(Transform destination, Action onArrive = null)
         => GoVia(null, destination, onArrive);
 
-    /// Идти по путевым точкам, затем к конечной точке.
+  
     public void GoVia(IReadOnlyList<Transform> waypoints, Transform destination, Action onArrive = null)
     {
         _path.Clear();
@@ -144,7 +138,6 @@ public class Visitor : MonoBehaviour
         SetAnimSpeed(0f);
     }
 
-    /// Мгновенно поставить в камеру и остановить.
     public void Detain(Vector3 position, Quaternion rotation)
     {
         _path.Clear();
@@ -173,7 +166,7 @@ public class Visitor : MonoBehaviour
         {
             var h = _groundHits[i];
             if (!h.collider) continue;
-            if (h.collider.transform.IsChildOf(transform)) continue;   // свой коллайдер не считаем
+            if (h.collider.transform.IsChildOf(transform)) continue;  
 
             if (h.point.y > bestY) { bestY = h.point.y; found = true; }
         }

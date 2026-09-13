@@ -3,42 +3,37 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-/// Взгляд игрока на посетителя: показывает подсказку и по клавише открывает панель проверки.
+
 public class PlayerInteractor : MonoBehaviour
 {
-    [Header("References")]
-    [Tooltip("Leave empty: uses Camera.main, then any camera in children.")]
+   
     public Camera playerCamera;
     public CheckpointController controller;
 
-    [Header("Detection")]
-    [Tooltip("Max distance from the camera to the visitor, meters.")]
+   
     public float range = 6f;
-    [Tooltip("Max angle between where you look and the visitor, degrees.")]
+   
     public float maxAngle = 40f;
-    [Tooltip("Height above the visitor's feet used as the aim target.")]
+   
     public float aimHeight = 1.2f;
 
-    [Header("Doors")]
-    [Tooltip("Look at a door and press the key to open or close it.")]
+    
     public bool allowDoors = true;
     public float doorRange = 3f;
     public LayerMask doorMask = ~0;
 
-    [Header("Line of sight (optional)")]
-    [Tooltip("Require nothing solid between the camera and the visitor. Needs colliders in the scene.")]
+   
     public bool requireLineOfSight = false;
     public LayerMask obstacleMask = ~0;
 
-    [Header("Keys")]
-    [Tooltip("Legacy Input Manager only. With the new Input System the keys are E and Escape.")]
+    
     public KeyCode interactKey = KeyCode.E;
     public KeyCode closeKey = KeyCode.Escape;
-    [Tooltip("Letter shown in the on-screen prompt.")]
+    
     public string keyLabel = "E";
 
     public bool PanelOpen { get; private set; }
-    /// Кадр, в котором панель закрылась. Меню паузы смотрит сюда, чтобы один Escape не сделал два действия.
+    
     public int LastCloseFrame { get; private set; } = -1;
     public Visitor Focused { get; private set; }
     public Door FocusedDoor { get; private set; }
@@ -59,12 +54,7 @@ public class PlayerInteractor : MonoBehaviour
         if (!controller) controller = FindFirstObjectByType<CheckpointController>();
     }
 
-    void Start()
-    {
-        if (!Cam)
-            Debug.LogError("[Interactor] Камера не найдена. Заполни поле Player Camera " +
-                           "или поставь камере тег MainCamera.", this);
-    }
+    
 
     void Update()
     {
@@ -78,7 +68,7 @@ public class PlayerInteractor : MonoBehaviour
         Focused = Detect();
         Prompt = BuildPrompt();
 
-        // Посетитель важнее: дверь предлагаем, только если проверять некого.
+        
         FocusedDoor = (Focused == null && allowDoors) ? DetectDoor() : null;
         if (FocusedDoor) Prompt = FocusedDoor.PromptText(keyLabel);
 
@@ -97,7 +87,7 @@ public class PlayerInteractor : MonoBehaviour
         if (!Physics.Raycast(ray, out var hit, doorRange, doorMask, QueryTriggerInteraction.Ignore))
             return null;
 
-        // Декоративные двери и те, что открываются скриптом, игрок не трогает.
+      
         var door = hit.collider.GetComponentInParent<Door>();
         return door && door.playerCanUse ? door : null;
     }

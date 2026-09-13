@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// Журнал событий смены - правая панель интерфейса.
 public class EventLog : MonoBehaviour
 {
     public int maxLines = 14;

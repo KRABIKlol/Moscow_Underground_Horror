@@ -1,58 +1,33 @@
 using System.Collections.Generic;
 using UnityEngine;
-
-/// Дверь: распашная или раздвижная. Открывается по взаимодействию игрока.
 public class Door : MonoBehaviour
 {
-    public enum DoorMode { Rotate, Slide }
-
-    [Header("Motion")]
-    public DoorMode mode = DoorMode.Rotate;
-    [Tooltip("What actually moves. Leave empty to move this object.")]
-    public Transform pivot;
-    [Tooltip("Rotate mode: swing angle in degrees.")]
-    public float openAngle = 90f;
-    [Tooltip("Slide mode: local offset when fully open.")]
-    public Vector3 slideOffset = new Vector3(0f, 0f, 1f);
-    [Tooltip("Full open takes 1 / speed seconds.")]
-    public float speed = 2f;
-
-    [Header("Взаимодействие")]
-    [Tooltip("Выключи для декоративных дверей и для тех, что открываются скриптом или триггером: " +
-             "подсказка не появится и по клавише дверь не сработает. " +
-             "Open() / Close() / SetOpen() из кода работают по-прежнему.")]
-    public bool playerCanUse = true;
-
-    [Header("Behaviour")]
+    public enum DoorMode { Rotate, Slide }    
+    public DoorMode mode = DoorMode.Rotate;    
+    public Transform pivot;   
+    public float openAngle = 90f;    
+    public Vector3 slideOffset = new Vector3(0f, 0f, 1f);   
+    public float speed = 2f;   
+    public bool playerCanUse = true;    
     public bool startOpen = false;
     public bool locked = false;
-    [Tooltip("Rotate mode: swing away from whoever opens it.")]
     public bool openAwayFromUser = true;
     public bool autoClose = false;
     public float autoCloseDelay = 6f;
-
-    [Header("Linked leaves (double doors)")]
     public List<Door> linked = new List<Door>();
-
-    [Header("Audio (optional)")]
     public AudioSource audioSource;
     public AudioClip openClip;
     public AudioClip closeClip;
     public AudioClip lockedClip;
-
-    [Header("Prompt")]
     public string openText = "Открыть";
     public string closeText = "Закрыть";
     public string lockedText = "Заперто";
-
     public bool IsOpen { get; private set; }
-
     Transform Body => pivot ? pivot : transform;
-
     Vector3 _closedPos;
     Quaternion _closedRot;
-    float _t;          // 0 закрыта, 1 открыта
-    float _sign = 1f;  // в какую сторону распахивается
+    float _t;          
+    float _sign = 1f;  
     float _autoTimer;
 
     void Awake()
@@ -92,7 +67,6 @@ public class Door : MonoBehaviour
             Body.localPosition = _closedPos + slideOffset * e;
     }
 
-    /// Текст подсказки для интерактора. null — подсказку показывать не надо.
     public string PromptText(string keyLabel)
     {
         if (!playerCanUse) return null;
@@ -100,7 +74,6 @@ public class Door : MonoBehaviour
         return $"[{keyLabel}]  {(IsOpen ? closeText : openText)}";
     }
 
-    /// Нажатие игрока. userPosition нужна, чтобы дверь распахнулась от него.
     public void Interact(Vector3 userPosition)
     {
         if (!playerCanUse) return;
@@ -138,7 +111,7 @@ public class Door : MonoBehaviour
         foreach (var d in linked)
         {
             if (!d || d == this) continue;
-            d._sign = -_sign;          // вторая створка распахивается зеркально
+            d._sign = -_sign;          
             d.SetOpen(open, false);
         }
     }

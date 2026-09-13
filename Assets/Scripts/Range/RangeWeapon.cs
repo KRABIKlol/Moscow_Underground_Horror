@@ -5,87 +5,74 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-/// Ствол для стрельбища. Вешается прямо на модель оружия, лежащую на стеллаже.
-/// Пока оружие не взяли, компонент только хранит настройки и своё место на полке.
 [DisallowMultipleComponent]
 public class RangeWeapon : MonoBehaviour
 {
-    [Header("Описание")]
+    
     public string displayName = "АК-74";
 
-    [Header("Положение в руках")]
-    [Tooltip("Сам разворачивает ствол вперёд и кладёт в правый нижний угол экрана, " +
-             "определяя оси по габаритам модели. Поля ниже работают как поправка сверху.")]
     public bool autoFit = true;
-    [Tooltip("Если ствол после автоподгонки смотрит назад — поставь галку (в игре это клавиша F).")]
+   
     public bool flipBarrel;
-
-    [Tooltip("-1 — разворот подбирается по габаритам модели. 0..23 — фиксированный разворот из набора. " +
-             "В игре перебирается клавишей Tab в режиме подгонки (F2).")]
+    
     public int orientationPreset = -1;
 
-    [Tooltip("Поправка к положению: X вправо, Y вверх, Z вперёд от камеры. Нули = как подобрал автофит.")]
+    
     public Vector3 holdPosition = Vector3.zero;
-    [Tooltip("Поправка к повороту, градусы. Нули = как подобрал автофит.")]
+    
     public Vector3 holdRotation = Vector3.zero;
-    [Tooltip("Множитель к размеру модели в руках.")]
+ 
     public float holdScale = 1f;
-
-    [Header("Стрельба")]
+       
     public bool automatic = true;
-    [Tooltip("Выстрелов в минуту.")]
+   
     public float fireRate = 600f;
-    [Tooltip("Дальность луча, метры.")]
+   
     public float shotRange = 60f;
-    [Tooltip("Максимальный разброс при долгой очереди, градусы. 0 — всегда строго в прицел.")]
+   
     public float spread = 0.25f;
-    [Tooltip("Первый выстрел после паузы уходит точно в прицел, разброс набирается только очередью.")]
+    
     public bool firstShotAccurate = true;
-    [Tooltip("За сколько секунд разброс спадает обратно к нулю.")]
+    
     public float spreadRecovery = 0.5f;
-    [Tooltip("Рисовать след выстрела в Scene View — видно, куда реально ушла пуля.")]
-    public bool drawShotRays;
+    
     public LayerMask hitMask = ~0;
 
-    [Header("Магазин")]
+
     public int magazineSize = 30;
     public float reloadTime = 2.2f;
-    [Tooltip("Патроны в тире бесконечные — перезаряжать можно сколько угодно.")]
+   
     public bool infiniteReserve = true;
 
-    [Header("Отдача (двигает только модель, камеру не трогает)")]
+   
     public float recoilKick = 0.05f;
     public float recoilRise = 4f;
     public float recoilReturn = 10f;
+        
+   
 
-    [Header("ЗВУКИ ОРУЖИЯ — сюда кинуть свои клипы")]
-    [Tooltip("Выстрел. Положи несколько вариантов — на каждый выстрел берётся случайный, " +
-             "и очередь перестаёт звучать как один и тот же сэмпл. Если пусто, берётся Fire Clip ниже.")]
-    public AudioClip[] fireClips = new AudioClip[0];
-    [Tooltip("Один выстрел, если набор вариантов не нужен.")]
     public AudioClip fireClip;
-    [Tooltip("Хвост выстрела: эхо помещения. Играет одновременно с выстрелом, отдельной громкостью.")]
     public AudioClip tailClip;
+
     [Range(0f, 1f)] public float tailVolume = 0.5f;
-    [Tooltip("Щелчок по пустому магазину.")]
+    
     public AudioClip emptyClip;
-    [Tooltip("Перезарядка.")]
+    
     public AudioClip reloadClip;
 
-    [Header("Настройки звука")]
+    
     [Range(0f, 1f)] public float volume = 0.7f;
-    [Tooltip("Разброс высоты тона на каждый выстрел. 0 — мёртвая повторяемость, 0.06 — живо, 0.15 — заметно.")]
+   
     [Range(0f, 0.3f)] public float pitchJitter = 0.06f;
-    [Tooltip("Сколько выстрелов может звучать одновременно. При 600 в/мин хвосты накладываются, " +
-             "и одного источника мало.")]
+   
     [Range(1, 8)] public int voices = 4;
-    [Tooltip("Подчиняться ползунку громкости эффектов из настроек (AudioManager).")]
+   
     public bool useSfxVolume = true;
 
-    [Header("Эффекты")]
+   
     public ParticleSystem muzzleFlash;
 
-    [Header("Клавиши (старый Input Manager)")]
+
     public KeyCode reloadKeyLegacy = KeyCode.R;
 
     public bool Held { get; private set; }
@@ -93,10 +80,9 @@ public class RangeWeapon : MonoBehaviour
     public bool Reloading { get; private set; }
     public float ReloadProgress => reloadTime <= 0f ? 1f : Mathf.Clamp01(1f - _reloadLeft / reloadTime);
 
-    /// Стрельбище открывает огонь только на время раунда.
+   
     public bool FireEnabled { get; set; }
 
-    /// Выстрел (не попадание) — стрельбище считает по нему точность.
     public event Action OnShot;
 
     Transform _origParent;
@@ -115,7 +101,6 @@ public class RangeWeapon : MonoBehaviour
     Bounds _bounds;
     bool _hasBounds;
 
-    /// Длина модели по самой длинной оси, метры. Считается при взятии в руки.
     public float BarrelLength { get; private set; }
 
     void Awake()
@@ -123,10 +108,6 @@ public class RangeWeapon : MonoBehaviour
         Ammo = magazineSize;
     }
 
-    // ===== звук =====
-
-    /// Голоса лежат на отдельном дочернем объекте: одного источника на очередь не хватает,
-    /// выстрелы должны накладываться друг на друга, а не обрывать предыдущий.
     void EnsureVoices()
     {
         if (_voices != null && _voices.Length == Mathf.Max(1, voices)) return;
@@ -153,7 +134,7 @@ public class RangeWeapon : MonoBehaviour
         var src = host.AddComponent<AudioSource>();
         src.playOnAwake = false;
         src.loop = false;
-        src.spatialBlend = 0f;   // оружие в руках, звук не позиционируем
+        src.spatialBlend = 0f;   
         return src;
     }
 
@@ -163,19 +144,10 @@ public class RangeWeapon : MonoBehaviour
         return Mathf.Clamp01(own * sfx);
     }
 
-    AudioClip PickFireClip()
-    {
-        if (fireClips != null && fireClips.Length > 0)
-        {
-            var picked = fireClips[UnityEngine.Random.Range(0, fireClips.Length)];
-            if (picked) return picked;
-        }
-        return fireClip;
-    }
 
     void PlayShotSound()
     {
-        var clip = PickFireClip();
+        var clip = fireClip;
         if (!clip && !tailClip) return;
 
         EnsureVoices();
@@ -195,7 +167,6 @@ public class RangeWeapon : MonoBehaviour
         }
     }
 
-    // ===== взять / положить =====
 
     public void Take(Camera cam, Transform ignoreRoot)
     {
@@ -227,7 +198,7 @@ public class RangeWeapon : MonoBehaviour
             _origLossy.z / Mathf.Max(0.0001f, p.z));
         transform.localScale = _heldScale * Mathf.Max(0.01f, holdScale);
 
-        _hasBounds = TryLocalBounds(out _bounds);   // габариты меша считаем один раз при взятии
+        _hasBounds = TryLocalBounds(out _bounds);  
         ComputeAutoFit();
         transform.localPosition = HoldPos;
         transform.localRotation = HoldRot;
@@ -270,18 +241,18 @@ public class RangeWeapon : MonoBehaviour
         _reloadLeft = 0f;
     }
 
-    // ===== рантайм =====
+
 
     void Update()
     {
         if (!Held) return;
 
-        // Отдача возвращает модель на место.
+      
         _kick = Mathf.Lerp(_kick, 0f, Time.deltaTime * recoilReturn);
         _rise = Mathf.Lerp(_rise, 0f, Time.deltaTime * recoilReturn);
         _bloom = Mathf.MoveTowards(_bloom, 0f, Time.deltaTime / Mathf.Max(0.05f, spreadRecovery));
 
-        // Поза пересчитывается каждый кадр, поэтому поля можно крутить прямо в Play Mode.
+       
         transform.localScale = _heldScale * Mathf.Max(0.01f, holdScale);
         ComputeAutoFit();
         transform.localPosition = HoldPos - Vector3.forward * _kick;
@@ -299,8 +270,7 @@ public class RangeWeapon : MonoBehaviour
         }
 
         if (!FireEnabled) return;
-        if (Cursor.lockState != CursorLockMode.Locked) return;   // мышь на интерфейсе — не стреляем
-
+        if (Cursor.lockState != CursorLockMode.Locked) return;  
         if (ReloadPressed() && Ammo < magazineSize)
         {
             StartReload();
@@ -343,7 +313,6 @@ public class RangeWeapon : MonoBehaviour
         CastShot();
     }
 
-    // ===== автоподгонка позы =====
 
     public Quaternion HoldRot => Quaternion.Euler(holdRotation) * _autoRot;
     public Vector3 HoldPos => _autoPos + holdPosition;
@@ -358,7 +327,7 @@ public class RangeWeapon : MonoBehaviour
         flipBarrel = false;
     }
 
-    /// Ось меша с самым большим габаритом считаем стволом, средняя ось - верх оружия.
+   
     void ComputeAutoFit()
     {
         _autoRot = Quaternion.identity;
@@ -388,7 +357,6 @@ public class RangeWeapon : MonoBehaviour
         Vector3 scale = transform.localScale;
         BarrelLength = size[lo] * Mathf.Abs(scale[lo]);
 
-        // Чем длиннее ствол, тем дальше от камеры, иначе он режется ближней плоскостью.
         float z = Mathf.Clamp(0.26f + BarrelLength * 0.20f, 0.3f, 0.95f);
         Vector3 desiredCenter = new Vector3(0.20f, -0.16f, z);
 
@@ -397,8 +365,6 @@ public class RangeWeapon : MonoBehaviour
 
     static Vector3 AxisVec(int i) => i == 0 ? Vector3.right : i == 1 ? Vector3.up : Vector3.forward;
 
-    /// 24 разворота по осям: 6 вариантов, куда смотрит ствол, и 4 поворота вокруг него.
-    /// Перебором за несколько нажатий Tab находится правильный для любой модели.
     public const int PresetCount = 24;
 
     public static Quaternion PresetRotation(int index)
@@ -455,11 +421,11 @@ public class RangeWeapon : MonoBehaviour
     {
         if (!_cam) return;
 
-        // Луч строго из центра кадра — то же место, где нарисован прицел.
+      
         Ray ray = _cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         Vector3 dir = ray.direction;
 
-        // Прицельный выстрел уходит строго в перекрестие; разброс набирается только очередью.
+       
         float aimSpread = spread * (firstShotAccurate ? _bloom : 1f);
         _bloom = Mathf.Clamp01(_bloom + 0.34f);
 
@@ -469,7 +435,7 @@ public class RangeWeapon : MonoBehaviour
                   Quaternion.AngleAxis(UnityEngine.Random.Range(-aimSpread, aimSpread), _cam.transform.right) * dir;
         }
 
-        if (drawShotRays) Debug.DrawRay(ray.origin, dir * shotRange, Color.red, 1.5f);
+      
 
         var hits = Physics.RaycastAll(ray.origin, dir, shotRange, hitMask,
                                       QueryTriggerInteraction.Ignore);
@@ -480,8 +446,8 @@ public class RangeWeapon : MonoBehaviour
         foreach (var h in hits)
         {
             if (!h.collider) continue;
-            if (_ignoreRoot && h.transform.IsChildOf(_ignoreRoot)) continue;   // сам игрок
-            if (h.transform.IsChildOf(transform)) continue;                    // своё же оружие
+            if (_ignoreRoot && h.transform.IsChildOf(_ignoreRoot)) continue;   
+            if (h.transform.IsChildOf(transform)) continue;                    
 
             var target = h.collider.GetComponentInParent<ShootingTarget>();
             if (target) target.ReportHit(h);
@@ -503,7 +469,7 @@ public class RangeWeapon : MonoBehaviour
         voice.PlayOneShot(clip, Loudness(volume));
     }
 
-    // ===== ввод =====
+
 
     bool FireHeld()
     {
