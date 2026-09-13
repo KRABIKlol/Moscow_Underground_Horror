@@ -16,8 +16,9 @@ public class GameUI : MonoBehaviour
 
     public GameObject checkPanel;
     public Text panelTitle;
-
+    public GameObject tipPanel;
     public GameObject documentBlock;
+    public Text Label;
     public Text todayText;
     public Text nameText;
     public Text birthText;
@@ -206,7 +207,11 @@ public class GameUI : MonoBehaviour
                                         : insp ? "ДОСМОТР"
                                         : "ПОСТ";
 
-        if (documentBlock)    documentBlock.SetActive(docs && v != null);
+        if (documentBlock)
+        {
+            documentBlock.SetActive(docs && v != null);
+           
+        }
         if (itemsBlock)       itemsBlock.SetActive(insp && v != null);
         if (documentButtons)  documentButtons.SetActive(docs);
         if (inspectionButtons) inspectionButtons.SetActive(insp);

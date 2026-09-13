@@ -13,28 +13,16 @@ PrefabInstance:
       value: model
       objectReference: {fileID: 0}
     - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.23986
-      objectReference: {fileID: 0}
-    - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.23986
-      objectReference: {fileID: 0}
-    - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.23986
-      objectReference: {fileID: 0}
-    - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 181.74
+      value: 186.94606
       objectReference: {fileID: 0}
     - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.3877
+      value: 0.17009106
       objectReference: {fileID: 0}
     - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -4.9558
+      value: 9.687155
       objectReference: {fileID: 0}
     - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
       propertyPath: m_LocalRotation.w
@@ -63,6 +51,22 @@ PrefabInstance:
     - target: {fileID: -5822248857759095700, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -5103634411755228159, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.00006
+      objectReference: {fileID: 0}
+    - target: {fileID: -5103634411755228159, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.00006
+      objectReference: {fileID: 0}
+    - target: {fileID: -5103634411755228159, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.00006
+      objectReference: {fileID: 0}
+    - target: {fileID: -5103634411755228159, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

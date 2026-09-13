@@ -82,7 +82,7 @@ MonoBehaviour:
   - displayName: "\u041C\u043E\u043D\u0442\u0438\u0440\u043E\u0432\u043A\u0430"
     banned: 1
     triggersDetector: 1
-    prefab: {fileID: -6854386027549468247, guid: dacd4ae05ed17fe4f9168fd530b25362, type: 3}
+    prefab: {fileID: 6348651461380675792, guid: f520b218c59be7d49899b49e01017e85, type: 3}
     icon: {fileID: 0}
     note: 
   - displayName: "\u041A\u0430\u0441\u0442\u0435\u0442"
