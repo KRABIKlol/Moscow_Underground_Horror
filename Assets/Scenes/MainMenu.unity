@@ -7387,9 +7387,9 @@ MonoBehaviour:
   qualityDropdown: {fileID: 910685018}
   vSyncT: {fileID: 610077154}
   fullS: {fileID: 754041201}
-  masterSlider: {fileID: 0}
-  musicSlider: {fileID: 0}
-  sfxSlider: {fileID: 0}
+  masterSlider: {fileID: 386215017}
+  musicSlider: {fileID: 1746947382}
+  sfxSlider: {fileID: 901031150}
 --- !u!4 &1657900466
 Transform:
   m_ObjectHideFlags: 0
